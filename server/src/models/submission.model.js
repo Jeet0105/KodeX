@@ -1,59 +1,67 @@
 import mongoose from "mongoose";
 
 const testCaseResultSchema = new mongoose.Schema({
-    status: {
-      type: String,
-      enum: ["passed", "failed"],
-      required: true,
-    },
-    runtime: Number,
-    memory: Number,
+  status: {
+    type: String,
+    enum: ["passed", "failed"],
   },
-  { _id: false });
+
+  isEdgeCase: { type: Boolean, default: false },
+  isHidden: { type: Boolean, default: false },
+
+  runtime: Number,
+  memory: Number,
+}, { _id: false });
 
 const submissionSchema = new mongoose.Schema({
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    problem: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Problem",
-      required: true,
-    },
-    language: {
-      type: String,
-      enum: ["cpp", "java", "python", "javascript"],
-      required: true,
-    },
-    code: {
-      type: String,
-      required: true,
-    },
-
-    verdict: {
-      type: String,
-      enum: ["AC", "WA", "TLE", "MLE", "CE"],
-      required: true,
-    },
-
-    compileError: {
-      type: String,
-    },
-
-    totalRuntime: Number,
-    totalMemory: Number,
-
-    testCaseResults: [testCaseResultSchema],
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
   },
-  { timestamps: true }
-);
 
-/* Indexes */
+  problem: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Problem",
+    required: true,
+  },
+
+  language: {
+    type: String,
+    enum: ["cpp", "java", "python", "javascript"],
+  },
+
+  code: String,
+
+  verdict: {
+    type: String,
+    enum: ["AC", "WA", "TLE", "MLE", "CE"],
+  },
+
+  detailedVerdict: {
+    type: String,
+    enum: [
+      "Partial Accepted",
+      "Edge Case Failure",
+      "Hidden Testcase Failure",
+      "Compilation Error",
+      "Runtime Error",
+      "Time Limit Exceeded",
+      "Memory Limit Exceeded"
+    ]
+  },
+
+  passedCount: Number,
+  totalCount: Number,
+
+  totalRuntime: Number,
+  totalMemory: Number,
+
+  testCaseResults: [testCaseResultSchema],
+
+}, { timestamps: true });
+
 submissionSchema.index({ user: 1, createdAt: -1 });
 submissionSchema.index({ problem: 1, verdict: 1 });
-submissionSchema.index({ user: 1, problem: 1 });
 
-const Submission = mongoose.model("Submission", submissionSchema);
-export default Submission;
+export default mongoose.model("Submission", submissionSchema);
