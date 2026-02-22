@@ -5,9 +5,9 @@ import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
-import xss from "xss-clean";
 import hpp from "hpp";
-import mongoSanitize from "mongo-sanitize";
+// import mongoSanitize from "express-mongo-sanitize";
+import authRoutes from "./src/routes/auth.routes.js";
 
 dotenv.config();
 
@@ -17,41 +17,34 @@ const app = express();
    Security Middlewares
 ======================== */
 
-// Set secure HTTP headers
 app.use(helmet());
-
-// Enable CORS
 app.use(cors());
 
-// Rate Limiting (100 requests per 15 mins per IP)
-const limiter = rateLimit({
+/* Rate limiting (only for auth routes) */
+const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   message: "Too many requests from this IP, please try again later.",
 });
-app.use("/api", limiter);
 
-// Body parser (limit payload size)
+app.use("/api/v1", authLimiter);
+
+/* Body parsers */
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
 
-// Prevent NoSQL injection
-app.use((req, res, next) => {
-  if (req.body) req.body = mongoSanitize(req.body);
-  if (req.query) req.query = mongoSanitize(req.query);
-  if (req.params) req.params = mongoSanitize(req.params);
-  next();
-});
+/* NoSQL injection prevention */
+// app.use(
+//   mongoSanitize({
+//     allowDots: true,
+//     replaceWith: "_",
+//   })
+// );
 
-// Prevent XSS attacks
-app.use(xss());
-
-// Prevent HTTP Parameter Pollution
+/* HPP protection */
 app.use(hpp());
 
-/* ========================
-   Logging (Dev Only)
-======================== */
+/* Logging (dev only) */
 if (process.env.NODE_ENV === "development") {
   app.use(morgan("dev"));
 }
@@ -67,40 +60,47 @@ app.get("/health", (req, res) => {
   });
 });
 
-/* ========================
-   Global Error Handler
-======================== */
+app.use("/api/v1/auth", authRoutes);
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(err.statusCode || 500).json({
+/* 404 handler */
+app.use((req, res) => {
+  res.status(404).json({
     status: "error",
-    message: err.message || "Internal Server Error",
+    message: "Route not found",
   });
 });
+
+/* ========================
+   Server Startup
+======================== */
 
 const PORT = process.env.PORT || 5000;
 
 const startServer = async () => {
-  await connectDB();
+  try {
+    await connectDB();
 
-  const server = app.listen(PORT, () => {
-    console.log(
-      `Server running in ${process.env.NODE_ENV} mode on port ${PORT}`
-    );
-  });
-
-  process.on("unhandledRejection", (err) => {
-    console.error("Unhandled Rejection:", err.message);
-    server.close(() => process.exit(1));
-  });
-
-  process.on("SIGTERM", () => {
-    console.log("SIGTERM received. Shutting down gracefully...");
-    server.close(() => {
-      console.log("Process terminated.");
+    const server = app.listen(PORT, () => {
+      console.log(
+        `Server running in ${process.env.NODE_ENV || "development"} mode on port ${PORT}`
+      );
     });
-  });
+
+    process.on("unhandledRejection", (err) => {
+      console.error("Unhandled Rejection:", err.message);
+      server.close(() => process.exit(1));
+    });
+
+    process.on("SIGTERM", () => {
+      console.log("SIGTERM received. Shutting down gracefully...");
+      server.close(() => {
+        console.log("Process terminated.");
+      });
+    });
+  } catch (error) {
+    console.error("Failed to start server:", error);
+    process.exit(1);
+  }
 };
 
 startServer();
