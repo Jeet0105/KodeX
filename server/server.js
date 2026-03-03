@@ -8,6 +8,7 @@ import rateLimit from "express-rate-limit";
 import hpp from "hpp";
 // import mongoSanitize from "express-mongo-sanitize";
 import authRoutes from "./src/routes/auth.routes.js";
+import problemRoutes from "./src/routes/problem.routes.js";
 
 dotenv.config();
 
@@ -66,6 +67,7 @@ app.get("/health", (req, res) => {
 });
 
 app.use("/api/v1/auth", authRoutes);
+app.use("/api/v1/problems", problemRoutes);
 
 /* 404 handler */
 app.use((req, res) => {
