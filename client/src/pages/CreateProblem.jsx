@@ -3,6 +3,8 @@ import { toast } from "react-toastify"
 import api from "../utils/api"
 import { useNavigate } from "react-router-dom"
 import { FiCheckCircle } from "react-icons/fi"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { problemSchema } from "../schemas/problemSchema.js"
 
 import ProblemFoundation from "../components/ProblemFoundation"
 import ConstraintsSection from "../components/ConstraintsSection"
@@ -16,6 +18,8 @@ function CreateProblem() {
   const navigate = useNavigate()
 
   const methods = useForm({
+    // resolver: zodResolver(problemSchema),
+    // mode: "onChange",
     defaultValues: {
       title: "",
       description: "",
@@ -31,26 +35,49 @@ function CreateProblem() {
         { language: "cpp", judge0LanguageId: 54, starterCode: "", solutionWrapper: "", functionName: "", timeLimit: 2, memoryLimit: 128000 },
         { language: "java", judge0LanguageId: 62, starterCode: "", solutionWrapper: "", functionName: "", timeLimit: 2, memoryLimit: 128000 },
         { language: "python", judge0LanguageId: 71, starterCode: "", solutionWrapper: "", functionName: "", timeLimit: 2, memoryLimit: 128000 },
-        { language: "javascript", judge0LanguageId: 63, starterCode: "", solutionWrapper: "", functionName: "", timeLimit: 2, memoryLimit: 128000 },
+        { language: "javascript", judge0LanguageId: 63, starterCode: "", solutionWrapper: "", functionName: "", timeLimit: 2, memoryLimit: 128000 }
       ]
     }
   })
 
   const onSubmit = async (data) => {
     try {
+      // Transform topics string → array
       const payload = {
         ...data,
         topics: data.topics
-          ? data.topics.split(",").map(t => t.trim()).filter(Boolean)
+          ? data.topics
+            .split(",")
+            .map(t => t.trim())
+            .filter(Boolean)
           : []
       }
 
-      await api.post("/api/v1/problems", payload)
+      // Debug: See exactly what is being sent
+      console.log("Final Payload:", payload)
 
-      toast.success("Problem created successfully")
-      navigate("/admin/problems")
+      // API call
+      const response = await api.post("/api/v1/problems", payload)
+
+      // Debug: Backend response
+      console.log("Server Response:", response.data)
+
+      toast.success("Problem created successfully 🚀")
+
+      // Optional: redirect after success
+      // navigate("/admin/problems")
+
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create problem")
+      console.log("Full Error Object:", err)
+
+      if (err.response) {
+        console.log("Backend Error Data:", err.response.data)
+        console.log("Status Code:", err.response.status)
+      }
+
+      toast.error(
+        err.response?.data?.message || "Failed to create problem"
+      )
     }
   }
 
@@ -70,12 +97,17 @@ function CreateProblem() {
 
         <FormProvider {...methods}>
           <form
-            onSubmit={methods.handleSubmit(onSubmit)}
+            onSubmit={methods.handleSubmit(
+              onSubmit,
+              (errors) => {
+                console.log("Validation Errors:", errors)
+              }
+            )}
             className="space-y-8"
           >
             <ProblemFoundation />
             <ProblemStatement />
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <div className="space-y-8">
                 <ConstraintsSection />
@@ -83,14 +115,15 @@ function CreateProblem() {
               </div>
               <ExamplesSection />
             </div>
-            
+
             <TestCasesSection />
             <DriverCodeSection />
 
             <div className="pt-6 flex justify-end">
               <button
                 type="submit"
-                disabled={methods.formState.isSubmitting}
+                // onClick={onSubmit}
+                //disabled={!methods.formState.isValid || methods.formState.isSubmitting}
                 className="group relative flex items-center gap-2 px-8 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl font-bold text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:pointer-events-none disabled:transform-none"
               >
                 {methods.formState.isSubmitting ? (
