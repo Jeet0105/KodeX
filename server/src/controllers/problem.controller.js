@@ -42,6 +42,17 @@ export const createProblem = async (req, res) => {
       });
     }
 
+    const cleanTestcases = (arr = []) =>
+      arr.filter(
+        (tc) =>
+          tc &&
+          tc.input?.toString().trim() &&
+          tc.output?.toString().trim()
+      );
+
+    const cleanedVisible = cleanTestcases(visibleTestcases);
+    const cleanedHidden = cleanTestcases(hiddenTestcases);
+
     const problem = await Problem.create({
       title: title.trim(),
       description,
@@ -51,8 +62,8 @@ export const createProblem = async (req, res) => {
       examples,
       hints,
       editorial,
-      visibleTestcases,
-      hiddenTestcases,
+      visibleTestcases: cleanedVisible,
+      hiddenTestcases: cleanedHidden,
       driverCode,
       createdBy: req.user._id,
       isPublished: false,

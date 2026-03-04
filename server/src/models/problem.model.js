@@ -123,16 +123,16 @@ const problemSchema = new mongoose.Schema(
 );
 
 /* ---------------- AUTO POINT CALC ---------------- */
-problemSchema.pre("save", function (next) {
+problemSchema.pre("save", function () {
+  const difficultyPoints = {
+    easy: 1,
+    medium: 2,
+    hard: 5,
+  };
+
   if (this.isModified("difficulty")) {
-    this.points =
-      this.difficulty === "easy"
-        ? 1
-        : this.difficulty === "medium"
-          ? 2
-          : 5;
+    this.points = difficultyPoints[this.difficulty];
   }
-  next();
 });
 
 /* ---------------- INDEXES ---------------- */

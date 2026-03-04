@@ -93,7 +93,11 @@ export const login = async (req, res) => {
       { expiresIn: "3d" }
     );
 
-    res.status(200).json({
+    res.status(200).cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
+    }).json({
       message: "Login successful",
       token,
       user,

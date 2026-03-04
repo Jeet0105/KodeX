@@ -9,6 +9,7 @@ import hpp from "hpp";
 // import mongoSanitize from "express-mongo-sanitize";
 import authRoutes from "./src/routes/auth.routes.js";
 import problemRoutes from "./src/routes/problem.routes.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -38,7 +39,7 @@ app.use("/api/v1", authLimiter);
 /* Body parsers */
 app.use(express.json({ limit: "10kb" }));
 app.use(express.urlencoded({ extended: true, limit: "10kb" }));
-
+app.use(cookieParser());
 /* NoSQL injection prevention */
 // app.use(
 //   mongoSanitize({

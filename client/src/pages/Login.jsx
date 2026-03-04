@@ -22,12 +22,6 @@ function Login() {
     try {
       const res = await api.post("/api/v1/auth/login", data)
 
-      // Store token
-      localStorage.setItem("token", res.data.token)
-
-      // Store user (optional but useful)
-      localStorage.setItem("user", JSON.stringify(res.data.user))
-
       toast.success(res.data.message || "Login successful")
 
       // Update Redux state

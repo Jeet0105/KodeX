@@ -1,4 +1,16 @@
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router';
+
 export default function Navbar() {
+  const { user } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+  const handleSignIn = () => {
+    if (!user) {
+      navigate("/login");
+    } else {
+      navigate("/dashboard");
+    }
+  }
   return (
     <header className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
       <div className="flex items-center gap-2">
@@ -13,10 +25,12 @@ export default function Navbar() {
       </nav>
 
       <div className="flex items-center gap-4">
-        <button className="text-gray-300 hover:text-white text-sm cursor-pointer">
-          Sign In
+        <button onClick={handleSignIn} className="text-gray-300 hover:text-white text-sm cursor-pointer">
+          {user ? 
+           <img src={user?.avatarUrl} alt="User Avatar" className="w-6 h-6 rounded-full" />
+           : "Sign In"}
         </button>
-        <button className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer">
+        <button onClick={handleSignIn} className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer">
           Get Started
         </button>
       </div>

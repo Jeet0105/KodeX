@@ -51,6 +51,12 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
+    //TODO: Add profile picture
+    // avatarUrl: {
+    //   type: String,
+    //   trim: true,
+    // },
+
     isActive: {
       type: Boolean,
       default: true,
