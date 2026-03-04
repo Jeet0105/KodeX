@@ -3,15 +3,20 @@ import { useNavigate } from "react-router-dom"
 import { FcGoogle } from "react-icons/fc"
 import { toast } from "react-toastify"
 import api from "../utils/api"
+import { useDispatch } from "react-redux"
+import { setUser } from "../redux/userSlice.js"
 
 function Login() {
   const navigate = useNavigate()
+  const dispatch = useDispatch()
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm()
+
+  
 
   const onSubmit = async (data) => {
     try {
@@ -25,6 +30,9 @@ function Login() {
 
       toast.success(res.data.message || "Login successful")
 
+      // Update Redux state
+      dispatch(setUser(res.data.user))
+      
       // Redirect
       navigate("/dashboard")
     } catch (err) {

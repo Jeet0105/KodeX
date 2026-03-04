@@ -164,7 +164,7 @@ function Register() {
 
                         <p className="text-gray-400 text-sm mt-6 text-center">
                             Already have an account?{" "}
-                            <span onClick={navigate("/login")} className="text-purple-400 hover:underline cursor-pointer">
+                            <span onClick={() => navigate("/login")} className="text-purple-400 hover:underline cursor-pointer">
                                 Log in
                             </span>
                         </p>
