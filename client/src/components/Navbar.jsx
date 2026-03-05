@@ -11,12 +11,17 @@ export default function Navbar() {
       navigate("/dashboard");
     }
   }
+  const handleGetStarted = () => {
+    navigate("/register");
+  };
   return (
     <header className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
       <div className="flex items-center gap-2">
-        <div className="w-6 h-6 bg-purple-600 rounded-md" /> {/* Logo Placeholder */}
-        <span className="font-semibold text-lg">Kode<span className="text-purple-600 font-bold text-xl">X</span></span>
-      </div>
+  <img src="/logo.png" alt="KodeX Logo" className="w-8 h-8" />
+  <span className="font-semibold text-lg">
+    Kode<span className="text-purple-600 font-bold text-xl">X</span>
+  </span>
+</div>
 
       <nav className="hidden md:flex gap-8 text-sm text-gray-300">
         <a href="#" className="hover:text-white">Problems</a>
@@ -26,11 +31,14 @@ export default function Navbar() {
 
       <div className="flex items-center gap-4">
         <button onClick={handleSignIn} className="text-gray-300 hover:text-white text-sm cursor-pointer">
-          {user ? 
-           <img src={user?.avatarUrl} alt="User Avatar" className="w-6 h-6 rounded-full" />
-           : "Sign In"}
+          {user ?
+            <img src={user?.avatarUrl} alt="User Avatar" className="w-6 h-6 rounded-full" />
+            : "Sign In"}
         </button>
-        <button onClick={handleSignIn} className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer">
+        <button
+          onClick={handleGetStarted}
+          className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
+        >
           Get Started
         </button>
       </div>

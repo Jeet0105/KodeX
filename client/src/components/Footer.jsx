@@ -11,7 +11,8 @@ function Footer() {
                     {/* LEFT SIDE - BRAND */}
                     <div className="max-w-sm">
                         <div className="flex items-center gap-3 mb-4">
-                            <div className="w-8 h-8 bg-gradient-to-br from-purple-600 to-purple-400 rounded-lg" />
+                            <img src="/logo.png" alt="KodeX Logo" className="w-8 h-8 object-contain" />
+
                             <span className="text-xl font-semibold text-white">
                                 Kode<span className="text-purple-500">X</span>
                             </span>
