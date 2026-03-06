@@ -5,6 +5,7 @@ import { toast } from "react-toastify"
 import api from "../utils/api"
 import { useDispatch } from "react-redux"
 import { setUser } from "../redux/userSlice.js"
+import Footer from "../components/Footer.jsx"
 
 function Login() {
   const navigate = useNavigate()
@@ -16,7 +17,7 @@ function Login() {
     formState: { errors, isSubmitting },
   } = useForm()
 
-  
+
 
   const onSubmit = async (data) => {
     try {
@@ -26,7 +27,7 @@ function Login() {
 
       // Update Redux state
       dispatch(setUser(res.data.user))
-      
+
       // Redirect
       navigate("/dashboard")
     } catch (err) {
@@ -47,8 +48,9 @@ function Login() {
       <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#1A0F2E] to-[#0B0617] p-16 flex-col justify-center">
 
         <div className="flex items-center gap-3 mb-12">
-          <div className="bg-gradient-to-r from-purple-600 to-pink-500 p-3 rounded-xl">
-            <span className="font-bold text-xl">⌘</span>
+          <div className="p-3 rounded-xl">
+            {/* <span className="font-bold text-xl">⌘</span> */}
+            <img src="/logo.png" alt="KodeX Logo" className="w-8 h-8 object-contain" />
           </div>
           <h1 className="text-2xl font-bold tracking-wide">KODEX</h1>
         </div>
@@ -68,7 +70,7 @@ function Login() {
             // dynamic_programming.cpp
           </p>
           <pre>
-{`int fib(int n) {
+            {`int fib(int n) {
   if (memo[n] != -1) return memo[n];
   return memo[n] = fib(n-1) + fib(n-2);
 }`}
@@ -161,7 +163,12 @@ function Login() {
             <FcGoogle size={20} />
             Continue with Google
           </button>
-
+          <p className="text-gray-400 text-sm mt-6 text-center">
+            Don't have an account?{" "}
+            <span onClick={() => navigate("/register")} className="text-purple-400 hover:underline cursor-pointer">
+              Sign Up
+            </span>
+          </p>
         </div>
       </div>
     </div>
