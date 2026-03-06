@@ -47,12 +47,16 @@ function Login() {
       {/* LEFT SIDE */}
       <div className="hidden md:flex w-1/2 bg-gradient-to-br from-[#1A0F2E] to-[#0B0617] p-16 flex-col justify-center">
 
-        <div className="flex items-center gap-3 mb-12">
-          <div className="p-3 rounded-xl">
-            {/* <span className="font-bold text-xl">⌘</span> */}
-            <img src="/logo.png" alt="KodeX Logo" className="w-8 h-8 object-contain" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-wide">KODEX</h1>
+        <div className="flex items-center gap-1 mb-12">
+          <img
+            src="/logo.png"
+            alt="KodeX Logo"
+            className="w-8 h-8 object-contain"
+          />
+
+          <span className="text-2xl font-bold tracking-wide">
+            Kode<span className="text-purple-500 text-3xl font-extrabold">X</span>
+          </span>
         </div>
 
         <h2 className="text-5xl font-bold leading-tight">

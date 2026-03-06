@@ -15,12 +15,12 @@ function App() {
           {/* <Route path="/about" element={<About />} /> */}
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
-          <Route path='/create-problem' element={<CreateProblem />} />
+          <Route path='/admin/create-problem' element={<CreateProblem />} />
           <Route path='/admin' element={<AdminProblemDashboard />} />
         </Routes>
       </BrowserRouter>
     </>
-  )
+  ) 
 }
 
 export default App

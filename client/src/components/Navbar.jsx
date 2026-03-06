@@ -16,12 +16,12 @@ export default function Navbar() {
   };
   return (
     <header className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-      <div className="flex items-center gap-2">
-  <img src="/logo.png" alt="KodeX Logo" className="w-8 h-8" />
-  <span className="font-semibold text-lg">
-    Kode<span className="text-purple-600 font-bold text-xl">X</span>
-  </span>
-</div>
+      <div className="flex items-center gap-1">
+        <img src="/logo.png" alt="KodeX Logo" className="w-8 h-8" />
+        <span className="font-semibold text-lg">
+          Kode<span className="text-purple-600 font-bold text-xl">X</span>
+        </span>
+      </div>
 
       <nav className="hidden md:flex gap-8 text-sm text-gray-300">
         <a href="#" className="hover:text-white">Problems</a>

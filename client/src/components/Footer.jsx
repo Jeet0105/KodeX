@@ -10,7 +10,7 @@ function Footer() {
 
                     {/* LEFT SIDE - BRAND */}
                     <div className="max-w-sm">
-                        <div className="flex items-center gap-3 mb-4">
+                        <div className="flex items-center gap-1 mb-4">
                             <img src="/logo.png" alt="KodeX Logo" className="w-8 h-8 object-contain" />
 
                             <span className="text-xl font-semibold text-white">
