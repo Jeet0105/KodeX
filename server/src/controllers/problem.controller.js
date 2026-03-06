@@ -213,7 +213,6 @@ export const getProblems = async (req, res) => {
     limit = Number(limit);
 
     const query = {
-      isPublished: true,
       isDeleted: false,
     };
 
@@ -240,7 +239,7 @@ export const getProblems = async (req, res) => {
 
       Problem.countDocuments(query),
     ]);
-
+    
     res.status(200).json({
       page,
       totalPages: Math.ceil(total / limit),

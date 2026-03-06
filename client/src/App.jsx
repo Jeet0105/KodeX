@@ -3,6 +3,7 @@ import Home from './pages/Home'
 import Register from './pages/Register'
 import Login from './pages/Login'
 import CreateProblem from './pages/CreateProblem'
+import AdminProblemDashboard from './pages/AdminProblemDashboard'
 
 function App() {
 
@@ -15,6 +16,7 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
           <Route path='/create-problem' element={<CreateProblem />} />
+          <Route path='/admin' element={<AdminProblemDashboard />} />
         </Routes>
       </BrowserRouter>
     </>
