@@ -1,21 +1,34 @@
 import express from "express";
 import { verifyUser } from "../middleware/verifyUser.js";
 import { authorizeAdmin } from "../middleware/authorizeAdmin.js";
+
 import {
   createProblem,
   updateProblem,
   publishProblem,
+  deleteProblem,
+  getProblems,
 } from "../controllers/problem.controller.js";
 
 const router = express.Router();
 
-router.post("/", verifyUser, authorizeAdmin, createProblem);
-router.put("/:id", verifyUser, authorizeAdmin, updateProblem);
-router.patch("/:id/publish", verifyUser, authorizeAdmin, publishProblem);
-//todo
-// router.delete("/:id", verifyUser, authorizeAdmin, deleteProblem);
+/* ---------- PUBLIC ROUTES ---------- */
 
-// router.get("/", getPublishedProblems);
-// router.get("/:id", getProblemById);
+// get all problems
+router.get("/", getProblems);
+
+/* ---------- ADMIN ROUTES ---------- */
+
+// create problem
+router.post("/", verifyUser, authorizeAdmin, createProblem);
+
+// update problem
+router.put("/:id", verifyUser, authorizeAdmin, updateProblem);
+
+// publish problem
+router.patch("/:id/publish", verifyUser, authorizeAdmin, publishProblem);
+
+// soft delete problem
+router.delete("/:id", verifyUser, authorizeAdmin, deleteProblem);
 
 export default router;

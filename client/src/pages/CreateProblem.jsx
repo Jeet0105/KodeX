@@ -18,8 +18,8 @@ function CreateProblem() {
   const navigate = useNavigate()
 
   const methods = useForm({
-    // resolver: zodResolver(problemSchema),
-    // mode: "onChange",
+    resolver: zodResolver(problemSchema),
+    mode: "onChange",
     defaultValues: {
       title: "",
       description: "",
@@ -100,7 +100,7 @@ function CreateProblem() {
             onSubmit={methods.handleSubmit(
               onSubmit,
               (errors) => {
-                console.log("Validation Errors:", errors)
+                toast.error(errors || "Please fix the errors in the form.")
               }
             )}
             className="space-y-8"
