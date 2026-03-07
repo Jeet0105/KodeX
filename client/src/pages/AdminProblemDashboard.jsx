@@ -226,6 +226,16 @@ function AdminProblemDashboard() {
                         <button
                           type="button"
                           onClick={() =>
+                            navigate(`/admin/problem/${problem._id}`)
+                          }
+                          className="text-green-400 hover:underline cursor-pointer"
+                        >
+                          View
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() =>
                             navigate(`/admin/edit-problem/${problem._id}`)
                           }
                           className="text-blue-400 hover:underline cursor-pointer"
@@ -265,11 +275,10 @@ function AdminProblemDashboard() {
             type="button"
             disabled={page === 1}
             onClick={() => setPage(page - 1)}
-            className={`px-4 py-2 rounded-lg ${
-              page === 1
+            className={`px-4 py-2 rounded-lg ${page === 1
                 ? "opacity-40 cursor-not-allowed"
                 : "bg-[#1A1235]"
-            }`}
+              }`}
           >
             Prev
           </button>
@@ -282,11 +291,10 @@ function AdminProblemDashboard() {
             type="button"
             disabled={page === totalPages}
             onClick={() => setPage(page + 1)}
-            className={`px-4 py-2 rounded-lg ${
-              page === totalPages
+            className={`px-4 py-2 rounded-lg ${page === totalPages
                 ? "opacity-40 cursor-not-allowed"
                 : "bg-[#1A1235]"
-            }`}
+              }`}
           >
             Next
           </button>

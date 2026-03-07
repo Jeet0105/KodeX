@@ -8,6 +8,7 @@ import {
   publishProblem,
   deleteProblem,
   getProblems,
+  getProblemById
 } from "../controllers/problem.controller.js";
 
 const router = express.Router();
@@ -16,6 +17,7 @@ const router = express.Router();
 
 // get all problems
 router.get("/", getProblems);
+router.get("/:id", getProblemById);
 
 /* ---------- ADMIN ROUTES ---------- */
 

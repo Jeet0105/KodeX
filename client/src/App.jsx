@@ -4,6 +4,7 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import CreateProblem from './pages/CreateProblem'
 import AdminProblemDashboard from './pages/AdminProblemDashboard'
+import ViewProblem from './pages/ViewProblem'
 
 function App() {
 
@@ -17,6 +18,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path='/admin/create-problem' element={<CreateProblem />} />
           <Route path='/admin' element={<AdminProblemDashboard />} />
+          <Route path="/admin/problem/:id" element={<ViewProblem />} />
         </Routes>
       </BrowserRouter>
     </>

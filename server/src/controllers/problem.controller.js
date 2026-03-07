@@ -252,3 +252,31 @@ export const getProblems = async (req, res) => {
     });
   }
 };
+export const getProblemById = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const problem = await Problem.findById(id)
+      .select("+driverCode +hiddenTestcases");
+
+    if (!problem || problem.isDeleted) {
+      return res.status(404).json({
+        message: "Problem not found"
+      });
+    }
+
+    res.status(200).json({
+      problem
+    });
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: "Server error"
+    });
+
+  }
+};
