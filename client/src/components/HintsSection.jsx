@@ -17,9 +17,11 @@ function HintsSection() {
       <div className="space-y-4 flex-grow mb-6">
         {fields.map((field, i) => (
           <div key={field.id} className="flex items-center gap-3 group">
-            <span className="text-xs font-bold text-blue-400 opacity-50 w-5">#{i + 1}</span>
+            <span className="text-xs font-bold text-blue-400 opacity-50 w-5">
+              #{i + 1}
+            </span>
             <input
-              {...register(`hints.${i}`)}
+              {...register(`hints.${i}.value`)}
               placeholder="e.g. Try using a hash map to store seen values"
               className="w-full p-3 bg-black/40 border border-white/5 rounded-xl text-sm text-blue-50 placeholder:text-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none transition-all"
             />
@@ -34,13 +36,15 @@ function HintsSection() {
           </div>
         ))}
         {fields.length === 0 && (
-          <p className="text-gray-500 italic text-sm text-center py-4">No hints added.</p>
+          <p className="text-gray-500 italic text-sm text-center py-4">
+            No hints added.
+          </p>
         )}
       </div>
 
       <button
         type="button"
-        onClick={() => append("")}
+        onClick={() => append({ value: "" })}
         className="w-full py-3 flex items-center justify-center gap-2 border border-dashed border-white/20 text-gray-400 hover:text-blue-400 hover:border-blue-500/50 hover:bg-blue-500/5 rounded-xl transition-all duration-300 font-medium"
       >
         <FiPlus className="w-4 h-4" /> Add Hint

@@ -10,7 +10,7 @@ export const problemSchema = z.object({
   topics: z.string().optional(),
 
   constraints: z
-    .array(z.string().min(1, "Constraint cannot be empty"))
+    .array(z.object({ value: z.string().min(1, "Constraint cannot be empty") }))
     .min(1, "At least one constraint required"),
 
   examples: z
@@ -23,26 +23,16 @@ export const problemSchema = z.object({
     )
     .min(1, "At least one example required"),
 
-  hints: z.array(z.string()).optional(),
+  hints: z.array(z.object({ value: z.string() })).optional(),
 
   editorial: z.string().optional(),
 
   visibleTestcases: z
-    .array(
-      z.object({
-        input: z.string().min(1),
-        output: z.string().min(1)
-      })
-    )
+    .array(z.object({ input: z.string().min(1), output: z.string().min(1) }))
     .min(1, "At least one visible testcase required"),
 
   hiddenTestcases: z
-    .array(
-      z.object({
-        input: z.string().min(1),
-        output: z.string().min(1)
-      })
-    )
+    .array(z.object({ input: z.string().min(1), output: z.string().min(1) }))
     .min(1, "At least one hidden testcase required"),
 
   driverCode: z

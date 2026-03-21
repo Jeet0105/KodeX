@@ -18,7 +18,7 @@ function ConstraintsSection() {
         {fields.map((field, i) => (
           <div key={field.id} className="flex items-center gap-3 group">
             <input
-              {...register(`constraints.${i}`)}
+              {...register(`constraints.${i}.value`)}
               placeholder="e.g. 1 <= nums.length <= 10^4"
               className="w-full p-3 bg-black/40 border border-white/5 rounded-xl font-mono text-sm text-yellow-100 placeholder:text-gray-600 focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500 focus:outline-none transition-all"
             />
@@ -33,13 +33,15 @@ function ConstraintsSection() {
           </div>
         ))}
         {fields.length === 0 && (
-          <p className="text-gray-500 italic text-sm text-center py-4">No constraints added.</p>
+          <p className="text-gray-500 italic text-sm text-center py-4">
+            No constraints added.
+          </p>
         )}
       </div>
 
       <button
         type="button"
-        onClick={() => append("")}
+        onClick={() => append({ value: "" })}
         className="w-full py-3 flex items-center justify-center gap-2 border border-dashed border-white/20 text-gray-400 hover:text-yellow-400 hover:border-yellow-500/50 hover:bg-yellow-500/5 rounded-xl transition-all duration-300 font-medium"
       >
         <FiPlus className="w-4 h-4" /> Add Constraint
