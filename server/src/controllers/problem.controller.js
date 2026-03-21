@@ -234,8 +234,8 @@ export const getProblems = async (req, res) => {
       query.isPublished = true
     }
 
-    if (difficulty) query.difficulty = difficulty
-    if (topic) query.topics = topic
+    if (difficulty) query.difficulty = difficulty.toLowerCase()
+    if (topic) query.topics = { $regex: new RegExp(`^${topic}$`, "i") }
     if (search) query.$text = { $search: search }
 
     const skip = (page - 1) * limit

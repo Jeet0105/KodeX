@@ -5,6 +5,7 @@ import Login from './pages/Login'
 import CreateProblem from './pages/CreateProblem'
 import AdminProblemDashboard from './pages/AdminProblemDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
+import ProblemsPage from './pages/ProblemsPage'
 
 function App() {
   return (
@@ -27,6 +28,12 @@ function App() {
             <ProtectedRoute adminOnly>
               <CreateProblem />
             </ProtectedRoute>
+          }
+        />
+        <Route path="/problems"
+          element={<ProtectedRoute>
+            <ProblemsPage />
+          </ProtectedRoute>
           }
         />
       </Routes>

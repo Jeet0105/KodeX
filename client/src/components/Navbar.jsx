@@ -1,47 +1,109 @@
-import { useSelector } from 'react-redux';
-import { useNavigate } from 'react-router';
+import { useSelector } from 'react-redux'
+import { useNavigate, NavLink } from 'react-router-dom'
 
 export default function Navbar() {
-  const { user } = useSelector((state) => state.user);
-  const navigate = useNavigate();
-  const handleSignIn = () => {
-    if (!user) {
-      navigate("/login");
-    } else {
-      navigate("/dashboard");
-    }
-  }
-  const handleGetStarted = () => {
-    navigate("/register");
-  };
+  const { user } = useSelector((state) => state.user)
+  const navigate = useNavigate()
+
   return (
-    <header className="flex items-center justify-between px-8 py-6 max-w-7xl mx-auto">
-      <div className="flex items-center gap-1">
-        <img src="/logo.png" alt="KodeX Logo" className="w-8 h-8" />
-        <span className="font-semibold text-lg">
-          Kode<span className="text-purple-600 font-bold text-xl">X</span>
-        </span>
-      </div>
+    <header className="sticky top-0 z-50 w-full border-b border-white/[0.06]"
+      style={{ background: "rgba(8,6,18,0.85)", backdropFilter: "blur(12px)", fontFamily: "'Syne', sans-serif" }}>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&display=swap');`}</style>
 
-      <nav className="hidden md:flex gap-8 text-sm text-gray-300">
-        <a href="#" className="hover:text-white">Problems</a>
-        <a href="#" className="hover:text-white">Topics</a>
-        <a href="#" className="hover:text-white">Dashboard</a>
-      </nav>
+      <div className="flex items-center justify-between px-8 py-4 max-w-7xl mx-auto">
 
-      <div className="flex items-center gap-4">
-        <button onClick={handleSignIn} className="text-gray-300 hover:text-white text-sm cursor-pointer">
-          {user ?
-            <img src={user?.avatarUrl} alt="User Avatar" className="w-6 h-6 rounded-full" />
-            : "Sign In"}
-        </button>
-        <button
-          onClick={handleGetStarted}
-          className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer"
+        {/* Logo */}
+        <div
+          className="flex items-center gap-1.5 cursor-pointer select-none"
+          onClick={() => navigate("/")}
         >
-          Get Started
-        </button>
+          <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+            </svg>
+          </div>
+          <span className="font-bold text-lg text-white tracking-tight">
+            Kode<span className="text-violet-500">X</span>
+          </span>
+        </div>
+
+        {/* Nav links */}
+        <nav className="hidden md:flex items-center gap-1">
+          {[
+            { to: "/problems",  label: "Problems"  },
+            { to: "/topics",    label: "Topics"    },
+            { to: "/dashboard", label: "Dashboard" },
+          ].map(({ to, label }) => (
+            <NavLink key={to} to={to}
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  isActive
+                    ? "text-white bg-white/[0.08]"
+                    : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
+                }`
+              }
+            >
+              {label}
+            </NavLink>
+          ))}
+
+          {user?.role === "admin" && (
+            <NavLink to="/admin"
+              className={({ isActive }) =>
+                `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
+                  isActive
+                    ? "text-violet-300 bg-violet-600/15"
+                    : "text-violet-400 hover:text-violet-300 hover:bg-violet-600/10"
+                }`
+              }
+            >
+              Admin
+            </NavLink>
+          )}
+        </nav>
+
+        {/* Actions */}
+        <div className="flex items-center gap-3">
+          {user ? (
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-2.5 cursor-pointer group px-3 py-1.5 rounded-xl hover:bg-white/[0.04] transition-all"
+            >
+              {user.avatarUrl ? (
+                <img
+                  src={user.avatarUrl}
+                  alt="Avatar"
+                  className="w-8 h-8 rounded-full ring-2 ring-transparent group-hover:ring-violet-500 transition-all"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-xs font-bold text-white ring-2 ring-transparent group-hover:ring-violet-400 transition-all">
+                  {user.name?.charAt(0).toUpperCase() ?? "U"}
+                </div>
+              )}
+              <span className="text-sm text-gray-400 group-hover:text-white transition-colors hidden md:block">
+                {user.name}
+              </span>
+            </button>
+          ) : (
+            <>
+              <button
+                onClick={() => navigate("/login")}
+                className="text-gray-400 hover:text-white text-sm font-medium cursor-pointer transition-colors px-3 py-2 rounded-lg hover:bg-white/[0.04]"
+              >
+                Sign In
+              </button>
+              <button
+                onClick={() => navigate("/register")}
+                className="text-sm font-semibold cursor-pointer transition-all px-4 py-2 rounded-lg text-white hover:opacity-90 hover:-translate-y-px"
+                style={{ background: "linear-gradient(135deg, #6d28d9, #a855f7)", boxShadow: "0 4px 16px rgba(124,58,237,0.3)" }}
+              >
+                Get Started
+              </button>
+            </>
+          )}
+        </div>
+
       </div>
     </header>
-  );
+  )
 }
