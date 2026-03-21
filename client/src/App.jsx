@@ -4,9 +4,11 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import CreateProblem from './pages/CreateProblem'
 import AdminProblemDashboard from './pages/AdminProblemDashboard'
+import { useSelector } from 'react-redux'
 
 function App() {
-
+  const {user}=useSelector((state)=>state.user)
+  console.log(user);
   return (
     <>
       <BrowserRouter>
