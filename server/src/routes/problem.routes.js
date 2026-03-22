@@ -9,14 +9,14 @@ import {
   unpublishProblem,
   deleteProblem,
   getProblems,
+  getProblemById,
 } from "../controllers/problem.controller.js";
 
 const router = express.Router();
 
-/* ---------- PUBLIC ROUTES ---------- */
-
-// get all problems — verifyUser is optional here (sets req.user if token exists)
+/* ---------- USER ROUTES ---------- */
 router.get("/", verifyUser, getProblems);
+router.get("/:id", verifyUser, getProblemById);
 
 /* ---------- ADMIN ROUTES ---------- */
 

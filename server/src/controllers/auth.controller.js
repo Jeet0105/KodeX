@@ -57,56 +57,49 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body
 
     if (!email || !password) {
-      return res.status(400).json({
-        message: "Email and password are required",
-      });
+      return res.status(400).json({ message: "Email and password are required" })
     }
 
-    // Find user and include password
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select("+password")
 
-    if (!user) {
-      return res.status(400).json({
-        message: "Invalid email or password",
-      });
+    if (!user || !(await user.comparePassword(password))) {
+      return res.status(400).json({ message: "Invalid email or password" })
     }
 
-    // Compare password
-    const isMatch = await user.comparePassword(password);
-
-    if (!isMatch) {
-      return res.status(400).json({
-        message: "Invalid email or password",
-      });
-    }
-
-    // Generate JWT
     const token = jwt.sign(
-      {
-        id: user._id,
-        role: user.role,
-      },
+      { id: user._id, role: user.role },
       process.env.JWT_SECRET,
       { expiresIn: "3d" }
-    );
+    )
 
-    res.status(200).cookie("token", token, {
+    const { password: _, ...safeUser } = user.toObject()
+
+    res.status(200)
+      .cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 3 * 24 * 60 * 60 * 1000,
+      })
+      .json({
+        message: "Login successful",
+        user: safeUser,
+      })
+  } catch (error) {
+    console.error("Login Error:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+};
+
+export const logout = (req, res) => {
+  res.status(200)
+    .clearCookie("token", {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 3 * 24 * 60 * 60 * 1000, // 3 days
-    }).json({
-      message: "Login successful",
-      token,
-      user,
-    });
-  } catch (error) {
-    console.error("Login Error:", error);
-
-    res.status(500).json({
-      message: "Server error",
-    });
-  }
+      sameSite: "strict",
+    })
+    .json({ message: "Logout successful" })
 };
