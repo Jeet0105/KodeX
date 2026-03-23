@@ -77,7 +77,7 @@ export default function Navbar() {
                 />
               ) : (
                 <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-xs font-bold text-white ring-2 ring-transparent group-hover:ring-violet-400 transition-all">
-                  {user.name?.charAt(0).toUpperCase() ?? "U"}
+                  {user.username?.charAt(0).toUpperCase() ?? "U"}
                 </div>
               )}
               <span className="text-sm text-gray-400 group-hover:text-white transition-colors hidden md:block">
