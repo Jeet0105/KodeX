@@ -175,6 +175,17 @@ function AdminProblemDashboard() {
 
                       <td className="p-4">
                         <div className="flex gap-4 items-center">
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              navigate(`/admin/problem/${problem._id}`)
+                            }
+                            className="text-green-400 hover:underline cursor-pointer"
+                          >
+                            View
+                          </button>
+
                           <button
                             type="button"
                             onClick={() =>
@@ -211,6 +222,7 @@ function AdminProblemDashboard() {
                               Delete
                             </button>
                           )}
+
                         </div>
                       </td>
                     </tr>
@@ -243,9 +255,7 @@ function AdminProblemDashboard() {
             disabled={page === totalPages}
             onClick={() => setPage(page + 1)}
             className={`px-4 py-2 rounded-lg ${
-              page === totalPages
-                ? "opacity-40 cursor-not-allowed"
-                : "bg-[#1A1235]"
+              page === totalPages ? "opacity-40 cursor-not-allowed" : "bg-[#1A1235]"
             }`}
           >
             Next

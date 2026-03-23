@@ -7,6 +7,7 @@ import AdminProblemDashboard from './pages/AdminProblemDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import ProblemsPage from './pages/ProblemsPage'
 import ProblemSolvePage from './pages/ProblemSolvePage'
+import ViewProblem from './pages/ViewProblem'
 
 function App() {
   return (
@@ -38,9 +39,16 @@ function App() {
           }
         />
         <Route path="/problems/:id"
-          element={<ProtectedRoute>
+          element={<ProtectedRoute adminOnly>
             <ProblemSolvePage />
           </ProtectedRoute>
+          }
+        />
+        <Route path="/admin/problem/:id"
+          element={
+            <ProtectedRoute>
+              <ViewProblem />
+            </ProtectedRoute>
           }
         />
       </Routes>

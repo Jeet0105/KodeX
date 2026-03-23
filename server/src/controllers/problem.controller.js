@@ -275,4 +275,4 @@ export const getProblemById = async (req, res) => {
     console.error("Error fetching problem by ID: "+error)
     res.status(500).json({ message: "Server error" })
   }
-}
+};
