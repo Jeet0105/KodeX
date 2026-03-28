@@ -1,9 +1,13 @@
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { FcGoogle } from "react-icons/fc"
 import Footer from "../components/Footer"
 import { toast } from "react-toastify"
 import api from "../utils/api"
 import { useNavigate } from "react-router"
+import { useDispatch } from "react-redux"
+import { setUser } from "../redux/userSlice.js"
+import { handleGoogleAuth } from "../utils/googleAuth"
 
 function Register() {
     const {
@@ -13,6 +17,8 @@ function Register() {
         reset,
     } = useForm()
     const navigate = useNavigate()
+    const dispatch = useDispatch()
+    const [googleLoading, setGoogleLoading] = useState(false)
 
     const onSubmit = async (data) => {
         try {
@@ -27,9 +33,7 @@ function Register() {
     }
 
     const handleGoogleSignUp = () => {
-        //Todo: Implement Google OAuth flow
-        // Tode: setup firebase project and integrate
-        toast.error("Google Sign-Up is not implemented yet.")
+        handleGoogleAuth({ dispatch, setUser, navigate, setLoading: setGoogleLoading, toast });
     }
 
     return (
@@ -71,10 +75,11 @@ function Register() {
                         {/* Google Button */}
                         <button
                             onClick={handleGoogleSignUp}
-                            className="w-full flex items-center justify-center gap-3 bg-[#1A1235] hover:bg-[#22184A] border border-purple-700/30 py-3 rounded-lg transition mb-6 cursor-pointer"
+                            disabled={googleLoading}
+                            className="w-full flex items-center justify-center gap-3 bg-[#1A1235] hover:bg-[#22184A] border border-purple-700/30 py-3 rounded-lg transition mb-6 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <FcGoogle size={22} />
-                            <span className="font-medium">Continue with Google</span>
+                            <span className="font-medium">{googleLoading ? "Signing in..." : "Continue with Google"}</span>
                         </button>
 
                         {/* Divider */}

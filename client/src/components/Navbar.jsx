@@ -1,9 +1,19 @@
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { useNavigate, NavLink } from 'react-router-dom'
+import { clearUser } from '../redux/userSlice'
+import { auth } from '../firebase'
+import { signOut } from 'firebase/auth'
 
 export default function Navbar() {
   const { user } = useSelector((state) => state.user)
   const navigate = useNavigate()
+  const dispatch = useDispatch()
+
+  const handleLogout = async () => {
+    await signOut(auth)       // sign out from Firebase
+    dispatch(clearUser())     // clear user from Redux store
+    navigate('/')             // redirect to home
+  }
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/[0.06]"
@@ -65,25 +75,34 @@ export default function Navbar() {
         {/* Actions */}
         <div className="flex items-center gap-3">
           {user ? (
-            <button
-              onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-2.5 cursor-pointer group px-3 py-1.5 rounded-xl hover:bg-white/[0.04] transition-all"
-            >
-              {user.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
-                  alt="Avatar"
-                  className="w-8 h-8 rounded-full ring-2 ring-transparent group-hover:ring-violet-500 transition-all"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-xs font-bold text-white ring-2 ring-transparent group-hover:ring-violet-400 transition-all">
-                  {user.username?.charAt(0).toUpperCase() ?? "U"}
-                </div>
-              )}
-              <span className="text-sm text-gray-400 group-hover:text-white transition-colors hidden md:block">
-                {user.name}
-              </span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigate("/dashboard")}
+                className="flex items-center gap-2.5 cursor-pointer group px-3 py-1.5 rounded-xl hover:bg-white/[0.04] transition-all"
+              >
+                {user.avatarUrl ? (
+                  <img
+                    src={user.avatarUrl}
+                    alt="Avatar"
+                    className="w-8 h-8 rounded-full ring-2 ring-transparent group-hover:ring-violet-500 transition-all"
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-violet-600 flex items-center justify-center text-xs font-bold text-white ring-2 ring-transparent group-hover:ring-violet-400 transition-all">
+                    {user.username?.charAt(0).toUpperCase() ?? "U"}
+                  </div>
+                )}
+                <span className="text-sm text-gray-400 group-hover:text-white transition-colors hidden md:block">
+                  {user.name}
+                </span>
+              </button>
+
+              <button
+                onClick={handleLogout}
+                className="text-sm font-medium cursor-pointer text-gray-400 hover:text-red-400 transition-colors px-3 py-2 rounded-lg hover:bg-red-500/10"
+              >
+                Logout
+              </button>
+            </div>
           ) : (
             <>
               <button

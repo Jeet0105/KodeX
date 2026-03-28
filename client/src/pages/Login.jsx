@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
 import { FcGoogle } from "react-icons/fc"
@@ -6,10 +7,12 @@ import api from "../utils/api"
 import { useDispatch } from "react-redux"
 import { setUser } from "../redux/userSlice.js"
 import Footer from "../components/Footer.jsx"
+import { handleGoogleAuth } from "../utils/googleAuth";
 
 function Login() {
   const navigate = useNavigate()
   const dispatch = useDispatch()
+  const [googleLoading, setGoogleLoading] = useState(false)
 
   const {
     register,
@@ -38,8 +41,8 @@ function Login() {
   }
 
   const handleGoogleLogin = () => {
-    toast.info("Google login not implemented yet.")
-  }
+    handleGoogleAuth({ dispatch, setUser, navigate, setLoading: setGoogleLoading, toast });
+  };
 
   return (
     <div className="min-h-screen flex bg-[#0B0617] text-white">
@@ -162,10 +165,11 @@ function Login() {
           <button
             type="button"
             onClick={handleGoogleLogin}
-            className="w-full flex items-center justify-center gap-3 bg-[#140A2A] border border-purple-700/30 py-3 rounded-lg hover:bg-[#1B0F33] transition"
+            disabled={googleLoading}
+            className="w-full flex items-center justify-center gap-3 bg-[#140A2A] border border-purple-700/30 py-3 rounded-lg hover:bg-[#1B0F33] transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <FcGoogle size={20} />
-            Continue with Google
+            {googleLoading ? "Signing in..." : "Continue with Google"}
           </button>
           <p className="text-gray-400 text-sm mt-6 text-center">
             Don't have an account?{" "}
