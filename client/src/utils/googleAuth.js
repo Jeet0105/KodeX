@@ -1,19 +1,7 @@
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "../firebase";
+import api from "./api";
 
-/**
- * Reusable Google authentication handler.
- * Works for both Login and Register — Firebase handles both cases:
- *   - New user  → account is auto-created
- *   - Existing  → user is signed in silently
- *
- * @param {object} options
- * @param {Function} options.dispatch       - Redux dispatch
- * @param {Function} options.setUser        - Redux action to store user
- * @param {Function} options.navigate       - react-router navigate
- * @param {Function} options.setLoading     - setState to show/hide loading
- * @param {string}  [options.redirectPath]  - where to go on success (default "/dashboard")
- */
 export async function handleGoogleAuth({
   dispatch,
   setUser,
@@ -25,26 +13,30 @@ export async function handleGoogleAuth({
   setLoading(true);
 
   try {
+    // Step 1: Get user info from Firebase
     const result = await signInWithPopup(auth, provider);
-    const user = result.user;
+    const { displayName, email, photoURL } = result.user;
 
-    // Store minimal user info in Redux
-    dispatch(
-      setUser({
-        uid: user.uid,
-        displayName: user.displayName,
-        email: user.email,
-        photoURL: user.photoURL,
-      })
-    );
+    // Step 2: Send to YOUR backend — sets JWT cookie + upserts DB record
+    const res = await api.post("/api/v1/auth/google", {
+      username: displayName,
+      email,
+      profilePictureUrl: photoURL,
+    });
 
-    toast.success("Google sign-in successful! Welcome, " + (user.displayName || user.email));
+    // Step 3: Store YOUR backend's user shape in Redux (not Firebase's)
+    dispatch(setUser(res.data.user));
+
+    toast.success(res.data.message || "Google sign-in successful!");
     navigate(redirectPath);
   } catch (error) {
-    // auth/popup-closed-by-user is not a real error — user just closed the popup
     if (error.code !== "auth/popup-closed-by-user") {
       console.error("Google auth error:", error);
-      toast.error(error.message || "Google sign-in failed. Please try again.");
+      const message =
+        error.response?.data?.message || // backend error
+        error.message ||                 // firebase error
+        "Google sign-in failed.";
+      toast.error(message);
     }
   } finally {
     setLoading(false);

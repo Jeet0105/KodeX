@@ -20,8 +20,6 @@ function Login() {
     formState: { errors, isSubmitting },
   } = useForm()
 
-
-
   const onSubmit = async (data) => {
     try {
       const res = await api.post("/api/v1/auth/login", data)

@@ -21,7 +21,9 @@ const userSchema = new mongoose.Schema(
 
     password: {
       type: String,
-      required: true,
+      required: function () {
+        return !this.isGoogleUser; // Password is required for non-Google users
+      },
       minlength: 8,
       select: false,
     },
@@ -51,16 +53,21 @@ const userSchema = new mongoose.Schema(
       },
     ],
 
-    //TODO: Add profile picture
-    // avatarUrl: {
-    //   type: String,
-    //   trim: true,
-    // },
+    // TODO: Add profile picture
+    avatarUrl: {
+      type: String,
+      trim: true,
+    },
 
     isActive: {
       type: Boolean,
       default: true,
       select: false,
+    },
+
+    isGoogleUser: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }
