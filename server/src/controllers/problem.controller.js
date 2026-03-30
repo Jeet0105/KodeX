@@ -262,17 +262,17 @@ export const getProblems = async (req, res) => {
 
 export const getProblemById = async (req, res) => {
   try {
-    const { id } = req.params
+    const { id } = req.params;
 
-    const problem = await Problem.findById(id).select("+hiddenTestcases +driverCode")
+    const problem = await Problem.findById(id);
 
     if (!problem || problem.isDeleted || !problem.isPublished) {
-      return res.status(404).json({ message: "Problem not found" })
+      return res.status(404).json({ message: "Problem not found" });
     }
 
-    res.status(200).json({ problem })
+    res.status(200).json({ problem });
   } catch (error) {
-    console.error("Error fetching problem by ID: "+error)
-    res.status(500).json({ message: "Server error" })
+    console.error("Error fetching problem by ID: " + error);
+    res.status(500).json({ message: "Server error" });
   }
 };

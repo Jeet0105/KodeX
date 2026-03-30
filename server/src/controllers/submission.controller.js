@@ -1,0 +1,194 @@
+import { runAllTestCases } from "../services/codeExecution.service.js";
+import Problem from "../models/problem.model.js";
+import User from "../models/user.model.js";
+import Submission from "../models/submission.model.js";
+
+/**
+ * RUN — Execute on visible test cases only, no DB storage
+ */
+export const runCode = async (req, res) => {
+  try {
+    const { problemId, language, code } = req.body;
+
+    if (!problemId || !language || !code) {
+      return res.status(400).json({ message: "problemId, language and code are required" });
+    }
+
+    // Fetch problem with driverCode (select: false so need explicit select)
+    const problem = await Problem.findOne({
+      _id: problemId,
+      isPublished: true,
+      isDeleted: false,
+    }).select("+driverCode visibleTestcases");
+
+    if (!problem) {
+      return res.status(404).json({ message: "Problem not found" });
+    }
+
+    // Find driver config for selected language
+    const driver = problem.driverCode.find(
+      (d) => d.language === language.toLowerCase()
+    );
+
+    if (!driver) {
+      return res.status(400).json({ message: `No driver code found for language: ${language}` });
+    }
+
+    // Wrap user code with solution wrapper
+    const wrappedCode = driver.solutionWrapper.replace("{{USER_CODE}}", code);
+
+    const testCases = problem.visibleTestcases.map((tc) => ({
+      input: tc.input,
+      expected_output: tc.output,
+    }));
+
+    const { allPassed, results } = await runAllTestCases({
+      source_code: wrappedCode,
+      language_id: driver.judge0LanguageId,
+      testCases,
+    });
+
+    return res.status(200).json({
+      message: allPassed ? "All test cases passed" : "Some test cases failed",
+      allPassed,
+      results,
+    });
+  } catch (error) {
+    console.error("Run Code Error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+};
+
+/**
+ * SUBMIT — Execute on hidden test cases, store result in DB
+ */
+export const submitCode = async (req, res) => {
+  try {
+    const { problemId, language, code } = req.body;
+    const userId = req.user.id; // from auth middleware
+
+    if (!problemId || !language || !code) {
+      return res.status(400).json({ message: "problemId, language and code are required" });
+    }
+
+    const problem = await Problem.findOne({
+      _id: problemId,
+      isPublished: true,
+      isDeleted: false,
+    }).select("+driverCode +hiddenTestcases");
+
+    if (!problem) {
+      return res.status(404).json({ message: "Problem not found" });
+    }
+
+    const driver = problem.driverCode.find(
+      (d) => d.language === language.toLowerCase()
+    );
+
+    if (!driver) {
+      return res.status(400).json({ message: `No driver code found for language: ${language}` });
+    }
+
+    const wrappedCode = driver.solutionWrapper.replace("{{USER_CODE}}", code);
+
+    const testCases = problem.hiddenTestcases.map((tc) => ({
+      input: tc.input,
+      expected_output: tc.output,
+    }));
+
+    const { allPassed, results } = await runAllTestCases({
+      source_code: wrappedCode,
+      language_id: driver.judge0LanguageId,
+      testCases,
+      timeLimit: driver.timeLimit,
+      memoryLimit: driver.memoryLimit,
+    });
+
+    // ---- Compute verdict ----
+    const passedCount = results.filter((r) => r.passed).length;
+    const totalCount = results.length;
+
+    const totalRuntime = results.reduce((sum, r) => sum + (parseFloat(r.time) || 0), 0);
+    const totalMemory = results.reduce((sum, r) => sum + (r.memory || 0), 0);
+
+    let verdict;
+    let detailedVerdict;
+
+    const hasCompileError = results.some((r) => r.status.id === 6);
+    const hasTLE = results.some((r) => r.status.id === 5);
+    const hasMLE = results.some((r) => r.status.id === 15);
+    const hasRuntimeError = results.some((r) => r.status.id >= 7 && r.status.id <= 14);
+
+    if (hasCompileError) {
+      verdict = "CE";
+      detailedVerdict = "Compilation Error";
+    } else if (hasTLE) {
+      verdict = "TLE";
+      detailedVerdict = "Time Limit Exceeded";
+    } else if (hasMLE) {
+      verdict = "MLE";
+      detailedVerdict = "Memory Limit Exceeded";
+    } else if (hasRuntimeError) {
+      verdict = "WA";
+      detailedVerdict = "Runtime Error";
+    } else if (allPassed) {
+      verdict = "AC";
+      detailedVerdict = null;
+    } else {
+      verdict = "WA";
+      // Distinguish partial/full WA
+      if (passedCount === 0) {
+        detailedVerdict = "Hidden Testcase Failure";
+      } else {
+        detailedVerdict = "Partial Accepted";
+      }
+    }
+
+    // ---- Build testCaseResults for DB ----
+    const testCaseResults = results.map((r) => ({
+      status: r.passed ? "passed" : "failed",
+      isHidden: true,
+      isEdgeCase: false,
+      runtime: parseFloat(r.time) || 0,
+      memory: r.memory || 0,
+    }));
+
+    // ---- Save submission ----
+    const submission = await Submission.create({
+      user: userId,
+      problem: problemId,
+      language: language.toLowerCase(),
+      code,
+      verdict,
+      detailedVerdict,
+      passedCount,
+      totalCount,
+      totalRuntime: parseFloat(totalRuntime.toFixed(3)),
+      totalMemory,
+      testCaseResults,
+    });
+
+    // ---- If AC, add to user's solvedProblems (no duplicates) ----
+    if (verdict === "AC") {
+      await User.findByIdAndUpdate(userId, {
+        $addToSet: { solvedProblems: problemId },
+        $inc: { totalPoints: problem.points || 0 },
+      });
+    }
+
+    return res.status(201).json({
+      message: verdict === "AC" ? "Accepted" : detailedVerdict || "Wrong Answer",
+      verdict,
+      detailedVerdict,
+      passedCount,
+      totalCount,
+      totalRuntime: parseFloat(totalRuntime.toFixed(3)),
+      totalMemory,
+      submissionId: submission._id,
+      results, // detailed per-test breakdown
+    });
+  } catch (error) {
+    console.error("Submit Code Error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+};
