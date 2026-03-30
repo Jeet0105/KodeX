@@ -1,5 +1,5 @@
 import express from "express";
-import { runCode, submitCode } from "../controllers/submission.controller";
+import { runCode, submitCode } from "../controllers/submission.controller.js";
 import { verifyUser } from "../middleware/verifyUser.js";
 
 const router = express.Router();
