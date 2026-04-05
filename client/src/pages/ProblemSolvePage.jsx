@@ -44,9 +44,9 @@ const isAccepted = (data) => {
 // Frontend expects: output / expected / runtime (ms) / memory (MB)
 const normaliseResult = (r) => ({
   ...r,
-  output:   r.output   ?? r.actual_output   ?? "—",
+  output: r.output ?? r.actual_output ?? "—",
   expected: r.expected ?? r.expected_output ?? "—",
-  runtime:  r.runtime != null
+  runtime: r.runtime != null
     ? r.runtime
     : r.time != null
       ? parseFloat((parseFloat(r.time) * 1000).toFixed(2))
@@ -78,6 +78,8 @@ export default function ProblemSolvePage() {
   const [output, setOutput] = useState(null)
   const [outputOpen, setOutputOpen] = useState(false)
   const [langMenuOpen, setLangMenuOpen] = useState(false)
+  const [submissions, setSubmissions] = useState([])
+  const [subsLoading, setSubsLoading] = useState(false)
 
   /* ── fetch problem ── */
   useEffect(() => {
@@ -103,6 +105,24 @@ export default function ProblemSolvePage() {
     }
     fetchProblem()
   }, [id])
+
+  useEffect(() => {
+    if (activeTab !== "submissions") return
+
+    const fetchSubmissions = async () => {
+      setSubsLoading(true)
+      try {
+        const res = await api.get(`/api/v1/submissions/problem/${id}`)
+        setSubmissions(res.data.submissions || [])
+      } catch (err) {
+        console.error("Failed to fetch submissions", err)
+      } finally {
+        setSubsLoading(false)
+      }
+    }
+
+    fetchSubmissions()
+  }, [activeTab, id])
 
   const currentDriver = problem?.driverCode?.find(d => d.language === language)
   const currentCode = code[language] ?? ""
@@ -148,6 +168,10 @@ export default function ProblemSolvePage() {
         results: res.data.results?.map(normaliseResult) ?? [],
       }
       setOutput({ status: "submit", data })
+      if (activeTab === "submissions") {
+        const res2 = await api.get(`/api/v1/submissions/problem/${id}`)
+        setSubmissions(res2.data.submissions || [])
+      }
     } catch (err) {
       setOutput({ status: "error", message: err.response?.data?.message || "Submission failed" })
     } finally {
@@ -167,6 +191,8 @@ export default function ProblemSolvePage() {
       return updated
     })
   }
+
+  const formatDate = (date) => new Date(date).toLocaleString()
 
   if (loading) return (
     <div className="min-h-screen bg-[#080612] flex items-center justify-center">
@@ -348,11 +374,76 @@ export default function ProblemSolvePage() {
             )}
 
             {activeTab === "submissions" && (
-              <div className="flex flex-col items-center justify-center h-full text-gray-600 gap-3">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
-                </svg>
-                <div className="text-sm">No submissions yet</div>
+              <div className="space-y-3">
+
+                {subsLoading && (
+                  <div className="text-center text-gray-500 text-sm">
+                    Loading submissions...
+                  </div>
+                )}
+
+                {!subsLoading && submissions.length === 0 && (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-600 gap-3">
+                    <div className="text-sm">No submissions yet</div>
+                  </div>
+                )}
+
+                {!subsLoading && submissions.map((sub, i) => {
+                  const accepted = isAccepted(sub)
+                  const label = verdictLabel(sub)
+
+                  return (
+                    <div
+                      key={sub._id}
+                      onClick={() => {
+                        setOutput({
+                          status: "submit",
+                          data: {
+                            ...sub,
+                            results: sub.results?.map(normaliseResult) || []
+                          }
+                        })
+                        setOutputOpen(true)
+                      }}
+                      className="rounded-xl border border-white/[0.06] bg-black/20 hover:bg-black/30 transition p-4 cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-[12px] text-gray-500">
+                          #{submissions.length - i}
+                        </span>
+
+                        <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${accepted
+                            ? "text-green-400 bg-green-400/10"
+                            : "text-red-400 bg-red-400/10"
+                          }`}>
+                          {label}
+                        </span>
+                      </div>
+
+                      <div className="flex items-center justify-between text-[12px] text-gray-500">
+                        <div className="flex gap-3">
+                          <span className="uppercase">{sub.language}</span>
+
+                          {sub.runtime != null && (
+                            <span>{sub.runtime} ms</span>
+                          )}
+
+                          {sub.memory != null && (
+                            <span>{sub.memory} MB</span>
+                          )}
+                        </div>
+
+                        <span>{formatDate(sub.createdAt)}</span>
+                      </div>
+
+                      {sub.passedCount != null && (
+                        <div className="mt-2 text-[11px] text-gray-600">
+                          {sub.passedCount}/{sub.totalCount} passed
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
 
@@ -470,11 +561,10 @@ export default function ProblemSolvePage() {
                   )}
 
                   {output?.status === "run" && (
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
-                      output.data?.allPassed
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${output.data?.allPassed
                         ? "text-green-400 bg-green-400/10"
                         : "text-red-400 bg-red-400/10"
-                    }`}>
+                      }`}>
                       {output.data?.allPassed ? "● ACCEPTED" : "● WRONG ANSWER"}
                     </span>
                   )}
@@ -483,9 +573,8 @@ export default function ProblemSolvePage() {
                     const accepted = isAccepted(output.data)
                     const label = verdictLabel(output.data)
                     return (
-                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
-                        accepted ? "text-green-400 bg-green-400/10" : "text-red-400 bg-red-400/10"
-                      }`}>
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${accepted ? "text-green-400 bg-green-400/10" : "text-red-400 bg-red-400/10"
+                        }`}>
                         ● {label}
                       </span>
                     )

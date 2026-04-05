@@ -264,7 +264,7 @@ export const getProblemById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const problem = await Problem.findById(id);
+    const problem = await Problem.findById(id).select("+driverCode");
 
     if (!problem || problem.isDeleted || !problem.isPublished) {
       return res.status(404).json({ message: "Problem not found" });

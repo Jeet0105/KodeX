@@ -192,3 +192,22 @@ export const submitCode = async (req, res) => {
     res.status(500).json({ message: error.message || "Server error" });
   }
 };
+
+export const getUserSubmissions = async (req, res) => {
+  try {
+    const { problemId } = req.params;
+    const userId = req.user.id;
+
+    const submissions = await Submission.find({
+      user: userId,
+      problem: problemId,
+    })
+      .select("-code -testCaseResults")
+      .sort({ createdAt: -1 })
+      .limit(20);
+
+    return res.status(200).json({ submissions });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
