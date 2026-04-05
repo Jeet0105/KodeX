@@ -17,6 +17,45 @@ const diffColors = {
   hard: { text: "#f87171", bg: "rgba(239,68,68,0.1)", border: "rgba(239,68,68,0.2)" },
 }
 
+// Map backend verdict codes → display strings
+const verdictLabel = (data) => {
+  if (!data) return "Judged"
+  // if backend already sends a human string (e.g. "Accepted"), use it
+  if (data.verdict && data.verdict.length > 3) return data.verdict
+  // otherwise map short codes
+  const map = {
+    AC: "Accepted",
+    WA: "Wrong Answer",
+    TLE: "Time Limit Exceeded",
+    MLE: "Memory Limit Exceeded",
+    CE: "Compilation Error",
+    RE: "Runtime Error",
+  }
+  return map[data.verdict] ?? data.verdict ?? "Judged"
+}
+
+const isAccepted = (data) => {
+  if (!data) return false
+  return data.verdict === "AC" || data.verdict === "Accepted"
+}
+
+// Normalise a single result object coming from backend.
+// Backend returns: actual_output / expected_output / time (seconds) / memory (KB)
+// Frontend expects: output / expected / runtime (ms) / memory (MB)
+const normaliseResult = (r) => ({
+  ...r,
+  output:   r.output   ?? r.actual_output   ?? "—",
+  expected: r.expected ?? r.expected_output ?? "—",
+  runtime:  r.runtime != null
+    ? r.runtime
+    : r.time != null
+      ? parseFloat((parseFloat(r.time) * 1000).toFixed(2))
+      : null,
+  memory: r.memory != null
+    ? parseFloat((r.memory / 1024).toFixed(2))   // KB → MB (no-op if already MB)
+    : null,
+})
+
 export default function ProblemSolvePage() {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -42,7 +81,7 @@ export default function ProblemSolvePage() {
 
   /* ── fetch problem ── */
   useEffect(() => {
-    const fetch = async () => {
+    const fetchProblem = async () => {
       try {
         const res = await api.get(`/api/v1/problems/${id}`)
         const p = res.data.problem
@@ -62,23 +101,29 @@ export default function ProblemSolvePage() {
         setLoading(false)
       }
     }
-    fetch()
+    fetchProblem()
   }, [id])
 
   const currentDriver = problem?.driverCode?.find(d => d.language === language)
   const currentCode = code[language] ?? ""
 
+  /* ── Run — hits POST /api/v1/submissions/run-code ── */
   const handleRun = async () => {
     setRunning(true)
     setOutputOpen(true)
     setOutput({ status: "running" })
     try {
-      const res = await api.post(`/api/v1/submissions/run`, {
+      const res = await api.post(`/api/v1/submissions/run-code`, {
         problemId: id,
         language,
         code: currentCode,
       })
-      setOutput({ status: "run", data: res.data })
+      // normalise result fields
+      const data = {
+        ...res.data,
+        results: res.data.results?.map(normaliseResult) ?? [],
+      }
+      setOutput({ status: "run", data })
     } catch (err) {
       setOutput({ status: "error", message: err.response?.data?.message || "Run failed" })
     } finally {
@@ -86,17 +131,23 @@ export default function ProblemSolvePage() {
     }
   }
 
+  /* ── Submit — hits POST /api/v1/submissions/submit-code ── */
   const handleSubmit = async () => {
     setSubmitting(true)
     setOutputOpen(true)
     setOutput({ status: "running" })
     try {
-      const res = await api.post(`/api/v1/submissions/submit`, {
+      const res = await api.post(`/api/v1/submissions/submit-code`, {
         problemId: id,
         language,
         code: currentCode,
       })
-      setOutput({ status: "submit", data: res.data })
+      // normalise result fields
+      const data = {
+        ...res.data,
+        results: res.data.results?.map(normaliseResult) ?? [],
+      }
+      setOutput({ status: "submit", data })
     } catch (err) {
       setOutput({ status: "error", message: err.response?.data?.message || "Submission failed" })
     } finally {
@@ -111,7 +162,6 @@ export default function ProblemSolvePage() {
       try {
         localStorage.setItem(`kx-code-${id}`, JSON.stringify(updated))
       } catch (err) {
-        // ignore write errors
         console.error("Failed to save code to localStorage:", err)
       }
       return updated
@@ -382,8 +432,7 @@ export default function ProblemSolvePage() {
                 const updated = { ...prev, [language]: val ?? "" }
                 try {
                   localStorage.setItem(`kx-code-${id}`, JSON.stringify(updated))
-                } catch(err) {
-                  // ignore write errors (e.g. quota exceeded)
+                } catch (err) {
                   console.error("Failed to save code to localStorage:", err)
                 }
                 return updated
@@ -413,25 +462,55 @@ export default function ProblemSolvePage() {
               <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.05]">
                 <div className="flex items-center gap-2">
                   <span className="text-[11px] font-bold tracking-[0.1em] text-gray-500">CONSOLE OUTPUT</span>
+
                   {output?.status === "running" && (
                     <span className="flex items-center gap-1.5 text-[11px] text-yellow-400">
                       <span className="pulse-dot w-1.5 h-1.5 rounded-full bg-yellow-400" />Running...
                     </span>
                   )}
+
                   {output?.status === "run" && (
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${output.data?.allPassed ? "text-green-400 bg-green-400/10" : "text-red-400 bg-red-400/10"}`}>
+                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                      output.data?.allPassed
+                        ? "text-green-400 bg-green-400/10"
+                        : "text-red-400 bg-red-400/10"
+                    }`}>
                       {output.data?.allPassed ? "● ACCEPTED" : "● WRONG ANSWER"}
                     </span>
                   )}
-                  {output?.status === "submit" && (
-                    <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${output.data?.verdict === "Accepted" ? "text-green-400 bg-green-400/10" : "text-red-400 bg-red-400/10"}`}>
-                      ● {output.data?.verdict ?? "Judged"}
-                    </span>
-                  )}
+
+                  {output?.status === "submit" && (() => {
+                    const accepted = isAccepted(output.data)
+                    const label = verdictLabel(output.data)
+                    return (
+                      <span className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                        accepted ? "text-green-400 bg-green-400/10" : "text-red-400 bg-red-400/10"
+                      }`}>
+                        ● {label}
+                      </span>
+                    )
+                  })()}
+
                   {output?.status === "error" && (
                     <span className="text-[11px] font-bold px-2 py-0.5 rounded-md text-red-400 bg-red-400/10">● ERROR</span>
                   )}
                 </div>
+
+                {/* Stats row for submit */}
+                {output?.status === "submit" && output.data?.passedCount != null && (
+                  <div className="flex items-center gap-3 text-[11px] text-gray-500">
+                    <span>
+                      <span className="text-gray-300">{output.data.passedCount}</span>
+                      /{output.data.totalCount} passed
+                    </span>
+                    {output.data.totalRuntime != null && (
+                      <span>
+                        Runtime: <span className="text-gray-300">{output.data.totalRuntime} ms</span>
+                      </span>
+                    )}
+                  </div>
+                )}
+
                 <button onClick={() => setOutputOpen(false)} className="text-gray-600 hover:text-gray-300 transition-colors cursor-pointer">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                     <polyline points="18 15 12 9 6 15" />
@@ -445,37 +524,63 @@ export default function ProblemSolvePage() {
                     Executing code...
                   </div>
                 )}
+
                 {output?.status === "error" && (
                   <div className="text-[13px] text-red-400" style={{ fontFamily: "'JetBrains Mono',monospace" }}>
                     {output.message}
                   </div>
                 )}
+
                 {(output?.status === "run" || output?.status === "submit") && output?.data?.results?.map((r, i) => (
                   <div key={i} className="rounded-xl p-3 border"
                     style={{
                       background: r.passed ? "rgba(34,197,94,0.04)" : "rgba(239,68,68,0.04)",
-                      borderColor: r.passed ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)"
+                      borderColor: r.passed ? "rgba(34,197,94,0.12)" : "rgba(239,68,68,0.12)",
                     }}>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-[12px] font-bold text-gray-400">Test Case {i + 1}</span>
-                      <span className={`text-[11px] font-bold ${r.passed ? "text-green-400" : "text-red-400"}`}>
-                        {r.passed ? "✓ Passed" : "✗ Failed"}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        {/* Status badge from Judge0 when not a simple pass/fail */}
+                        {!r.passed && r.status?.description && r.status.id !== 3 && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20">
+                            {r.status.description}
+                          </span>
+                        )}
+                        <span className={`text-[11px] font-bold ${r.passed ? "text-green-400" : "text-red-400"}`}>
+                          {r.passed ? "✓ Passed" : "✗ Failed"}
+                        </span>
+                      </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-3" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "12px" }}>
                       <div>
                         <div className="text-gray-600 mb-1">Your Output</div>
-                        <div className="text-gray-300 bg-black/30 rounded-lg px-3 py-2">{r.output ?? "—"}</div>
+                        <div className="text-gray-300 bg-black/30 rounded-lg px-3 py-2 break-all">{r.output}</div>
                       </div>
                       <div>
                         <div className="text-gray-600 mb-1">Expected</div>
-                        <div className="text-gray-300 bg-black/30 rounded-lg px-3 py-2">{r.expected ?? "—"}</div>
+                        <div className="text-gray-300 bg-black/30 rounded-lg px-3 py-2 break-all">{r.expected}</div>
                       </div>
                     </div>
-                    {(r.runtime || r.memory) && (
+
+                    {/* Compile / stderr output */}
+                    {(r.compile_output || r.stderr) && (
+                      <div className="mt-2" style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "11px" }}>
+                        <div className="text-gray-600 mb-1">{r.compile_output ? "Compile Output" : "Stderr"}</div>
+                        <div className="text-orange-300/80 bg-black/30 rounded-lg px-3 py-2 whitespace-pre-wrap break-all">
+                          {r.compile_output || r.stderr}
+                        </div>
+                      </div>
+                    )}
+
+                    {(r.runtime != null || r.memory != null) && (
                       <div className="flex gap-4 mt-2 text-[11px] text-gray-600">
-                        {r.runtime && <span>Runtime: <span className="text-gray-400">{r.runtime} ms</span></span>}
-                        {r.memory && <span>Memory: <span className="text-gray-400">{r.memory} MB</span></span>}
+                        {r.runtime != null && (
+                          <span>Runtime: <span className="text-gray-400">{r.runtime} ms</span></span>
+                        )}
+                        {r.memory != null && (
+                          <span>Memory: <span className="text-gray-400">{r.memory} MB</span></span>
+                        )}
                       </div>
                     )}
                   </div>
