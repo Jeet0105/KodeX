@@ -9,6 +9,12 @@ import ProblemsPage from './pages/ProblemsPage'
 import ProblemSolvePage from './pages/ProblemSolvePage'
 import ViewProblem from './pages/ViewProblem'
 
+/* ── Admin panel ── */
+import AdminLayout from './pages/admin/AdminLayout'
+import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminUsers from './pages/admin/AdminUsers'
+import AdminSubmissions from './pages/admin/AdminSubmissions'
+
 function App() {
   return (
     <BrowserRouter>
@@ -16,41 +22,35 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
-        <Route
-          path="/admin/problems"
-          element={
-            <ProtectedRoute adminOnly>
-              <AdminProblemDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/create-problem"
-          element={
-            <ProtectedRoute adminOnly>
-              <CreateProblem />
-            </ProtectedRoute>
-          }
-        />
+
+        {/* ── Public problem routes ── */}
         <Route path="/problems"
           element={<ProtectedRoute>
             <ProblemsPage />
-          </ProtectedRoute>
-          }
+          </ProtectedRoute>}
         />
         <Route path="/problems/:id"
-          element={<ProtectedRoute adminOnly>
+          element={<ProtectedRoute>
             <ProblemSolvePage />
-          </ProtectedRoute>
-          }
+          </ProtectedRoute>}
         />
-        <Route path="/admin/problem/:id"
+
+        {/* ═══ ADMIN PANEL (nested routes under sidebar layout) ═══ */}
+        <Route
+          path="/admin"
           element={
-            <ProtectedRoute>
-              <ViewProblem />
+            <ProtectedRoute adminOnly>
+              <AdminLayout />
             </ProtectedRoute>
           }
-        />
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="users" element={<AdminUsers />} />
+          <Route path="problems" element={<AdminProblemDashboard />} />
+          <Route path="create-problem" element={<CreateProblem />} />
+          <Route path="problem/:id" element={<ViewProblem />} />
+          <Route path="submissions" element={<AdminSubmissions />} />
+        </Route>
       </Routes>
     </BrowserRouter>
   )

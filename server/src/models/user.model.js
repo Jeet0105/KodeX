@@ -65,6 +65,24 @@ const userSchema = new mongoose.Schema(
       select: false,
     },
 
+    isBanned: {
+      type: Boolean,
+      default: false,
+    },
+
+    banReason: {
+      type: String,
+      trim: true,
+    },
+
+    bannedAt: {
+      type: Date,
+    },
+
+    lastLoginAt: {
+      type: Date,
+    },
+
     isGoogleUser: {
       type: Boolean,
       default: false,

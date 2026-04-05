@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import api from "../utils/api"
 import { toast } from "react-toastify"
-import Footer from "../components/Footer"
+
 
 function AdminProblemDashboard() {
   const [problems, setProblems] = useState([])
@@ -263,7 +263,7 @@ function AdminProblemDashboard() {
         </div>
 
       </div>
-      <Footer />
+
     </div>
   )
 }
