@@ -211,3 +211,50 @@ export const getUserSubmissions = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const getAllUserSubmissions = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    let { page = 1, limit = 20, search, verdict, language } = req.query;
+    page = Number(page);
+    limit = Number(limit);
+
+    const query = { user: userId };
+
+    if (verdict && verdict !== "all") {
+      query.verdict = verdict;
+    }
+
+    if (language && language !== "all") {
+      query.language = language;
+    }
+
+    const skip = (page - 1) * limit;
+
+    const total = await Submission.countDocuments(query);
+
+    let submissions = await Submission.find(query)
+      .populate("problem", "title difficulty")
+      .select("-code -testCaseResults")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(limit);
+
+    if (search) {
+      const s = search.toLowerCase();
+      submissions = submissions.filter((sub) =>
+        sub.problem?.title?.toLowerCase().includes(s)
+      );
+    }
+
+    return res.status(200).json({
+      page,
+      totalPages: Math.ceil(total / limit),
+      totalSubmissions: total,
+      submissions,
+    });
+  } catch (error) {
+    console.error("Get All User Submissions Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

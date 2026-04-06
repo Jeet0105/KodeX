@@ -14,6 +14,10 @@ import AdminLayout from './pages/admin/AdminLayout'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import AdminUsers from './pages/admin/AdminUsers'
 import AdminSubmissions from './pages/admin/AdminSubmissions'
+import UserLayout from './pages/user/UserLayout'
+import UserDashboard from './pages/user/UserDashboard'
+import UserSubmissions from './pages/user/UserSubmissions'
+import UserProfile from './pages/user/UserProfile'
 
 function App() {
   return (
@@ -50,6 +54,20 @@ function App() {
           <Route path="create-problem" element={<CreateProblem />} />
           <Route path="problem/:id" element={<ViewProblem />} />
           <Route path="submissions" element={<AdminSubmissions />} />
+        </Route>
+
+        {/* ═══ USER DASHBOARD ═══ */}
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <UserLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route index element={<UserDashboard />} />
+          <Route path="profile" element={<UserProfile />} />
+          <Route path="problems" element={<UserSubmissions />} />
         </Route>
       </Routes>
     </BrowserRouter>

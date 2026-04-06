@@ -26,7 +26,6 @@ export default function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-[#0B0617] text-white overflow-hidden">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');`}</style>
 
       {/* ═══ MOBILE OVERLAY ═══ */}
       {mobileOpen && (
