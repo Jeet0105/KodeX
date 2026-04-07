@@ -26,7 +26,7 @@ const sidebarLinks = [
   { to: "/dashboard/problems", icon: FiFileText,      label: "Problems" },
   { to: "/dashboard/profile",  icon: FiUser,          label: "Profile" },
   { to: "/discussions",      icon: FiMessageSquare, label: "Discussions" },
-  { to: "/leaderboard",      icon: FiBarChart2,     label: "Leaderboard" },
+  { to: "/dashboard/leaderboard", icon: FiBarChart2,     label: "Leaderboard" },
 ]
 
 export default function UserLayout() {

@@ -187,3 +187,37 @@ export const updateUserProfile = async (req, res) => {
     res.status(500).json({ message: error.message || "Server error" });
   }
 };
+
+/**
+ * GET /api/v1/users/leaderboard
+ * Fetches the top users based on totalPoints
+ */
+export const getLeaderboard = async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+
+    const leaderboard = await User.find()
+      .select("username avatarUrl totalPoints solvedProblems")
+      .sort({ totalPoints: -1 })
+      .limit(limit);
+
+    // Map through to format structure and calculate solved problems length
+    const formattedLeaderboard = leaderboard.map((user, index) => ({
+      _id: user._id,
+      rank: index + 1,
+      username: user.username,
+      avatarUrl: user.avatarUrl,
+      totalPoints: user.totalPoints,
+      problemsSolvedCount: user.solvedProblems?.length || 0,
+      level: Math.floor((user.totalPoints || 0) / 10) + 1,
+    }));
+
+    res.status(200).json({
+      success: true,
+      data: formattedLeaderboard,
+    });
+  } catch (error) {
+    console.error("Leaderboard Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

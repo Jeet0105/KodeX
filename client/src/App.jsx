@@ -19,6 +19,7 @@ import UserLayout from './pages/user/UserLayout'
 import UserDashboard from './pages/user/UserDashboard'
 import UserSubmissions from './pages/user/UserSubmissions'
 import UserProfile from './pages/user/UserProfile'
+import UserLeaderboard from './pages/user/UserLeaderboard'
 
 function App() {
   return (
@@ -70,6 +71,7 @@ function App() {
           <Route index element={<UserDashboard />} />
           <Route path="profile" element={<UserProfile />} />
           <Route path="problems" element={<UserSubmissions />} />
+          <Route path="leaderboard" element={<UserLeaderboard />} />
         </Route>
       </Routes>
     </BrowserRouter>
