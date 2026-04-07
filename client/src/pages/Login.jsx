@@ -136,6 +136,15 @@ function Login() {
                   {errors.password.message}
                 </p>
               )}
+              
+              <div className="text-right mt-2">
+                <span 
+                  onClick={() => navigate("/forgot-password")} 
+                  className="text-purple-400 hover:underline cursor-pointer text-sm"
+                >
+                  Forgot Password?
+                </span>
+              </div>
             </div>
 
             {/* Submit */}
