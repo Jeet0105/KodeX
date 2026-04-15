@@ -1,6 +1,7 @@
 import User from "../models/user.model.js";
 import Problem from "../models/problem.model.js";
 import Submission from "../models/submission.model.js";
+import cloudinary from "../config/cloudinary.js";
 
 /**
  * GET /api/v1/users/dashboard-stats
@@ -185,7 +186,20 @@ export const updateUserProfile = async (req, res) => {
       user.username = username;
     }
 
-    if (avatarUrl !== undefined) {
+    // If a file was uploaded via multer (memory storage), upload to Cloudinary
+    if (req.file) {
+      const b64 = req.file.buffer.toString("base64");
+      const dataUri = `data:${req.file.mimetype};base64,${b64}`;
+
+      // Use unsigned upload to avoid timestamp/clock-skew issues
+      const result = await cloudinary.uploader.unsigned_upload(
+        dataUri,
+        process.env.CLOUDINARY_UPLOAD_PRESET || "kodex_avatars",
+        { folder: "kodex/avatars" }
+      );
+      user.avatarUrl = result.secure_url;
+    } else if (avatarUrl !== undefined) {
+      // Fallback for backwards compatibility if user just sends a text URL
       user.avatarUrl = avatarUrl;
     }
 

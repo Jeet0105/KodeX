@@ -10,17 +10,36 @@ export default function UserProfile() {
   const dispatch = useDispatch()
 
   const [username, setUsername] = useState(user?.username || "")
-  const [avatarUrl, setAvatarUrl] = useState(user?.avatarUrl || "")
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      setAvatarFile(file)
+      setAvatarPreview(URL.createObjectURL(file))
+    }
+  }
 
   const handleUpdate = async (e) => {
     e.preventDefault()
     setLoading(true)
     try {
-      const res = await api.put("/api/v1/users/profile", { username, avatarUrl })
+      const formData = new FormData()
+      formData.append("username", username)
+      if (avatarFile) {
+        formData.append("avatarUrl", avatarFile)
+      }
+
+      const res = await api.put("/api/v1/users/profile", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      })
       dispatch(setUser(res.data.user))
       toast.success("Profile updated successfully")
+      setAvatarFile(null)
+      setAvatarPreview(null)
       setIsEditing(false)
     } catch (err) {
       toast.error(err.response?.data?.message || "Failed to update profile")
@@ -31,7 +50,8 @@ export default function UserProfile() {
 
   const handleCancel = () => {
     setUsername(user?.username || "")
-    setAvatarUrl(user?.avatarUrl || "")
+    setAvatarFile(null)
+    setAvatarPreview(null)
     setIsEditing(false)
   }
 
@@ -44,7 +64,9 @@ export default function UserProfile() {
             {/* Avatar Section */}
             <div className="relative">
                 <div className="w-32 h-32 md:w-40 md:h-40 rounded-3xl overflow-hidden ring-4 ring-white/[0.05] shadow-2xl group/avatar transition-transform hover:scale-[1.02]">
-                    {user?.avatarUrl ? (
+                    {avatarPreview ? (
+                        <img src={avatarPreview} alt="Avatar Preview" className="w-full h-full object-cover" />
+                    ) : user?.avatarUrl ? (
                         <img src={user.avatarUrl} alt="User Profile" className="w-full h-full object-cover" />
                     ) : (
                         <div className="w-full h-full bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center text-4xl font-black text-white">
@@ -156,22 +178,22 @@ export default function UserProfile() {
                 </div>
             </div>
 
-            {/* Avatar URL field */}
+            {/* Avatar File field */}
             <div className="md:col-span-2 space-y-3">
-                <label className="text-xs font-black text-gray-500 uppercase tracking-widest ml-1">Avatar URL</label>
+                <label className="text-xs font-black text-gray-500 uppercase tracking-widest ml-1">Avatar Image</label>
                 <div className={`relative transition-all duration-300 ${isEditing ? "scale-[1.005]" : ""}`}>
                     <FiCamera className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${isEditing ? "text-violet-400" : "text-gray-600"}`} size={18} />
                     <input 
-                      type="text" 
-                      value={avatarUrl}
-                      onChange={(e) => setAvatarUrl(e.target.value)}
+                      type="file" 
+                      accept="image/*"
+                      onChange={handleFileChange}
                       disabled={!isEditing}
-                      placeholder="https://images.unsplash.com/your-avatar..."
-                      className={`w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-white outline-none transition-all ${isEditing ? "focus:border-violet-500/50 focus:bg-white/[0.04]" : "opacity-60 cursor-not-allowed"}`}
+                      className={`w-full pl-12 pr-4 py-3.5 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-white outline-none transition-all ${isEditing ? "focus:border-violet-500/50 focus:bg-white/[0.04]" : "opacity-60 cursor-not-allowed"}
+                      file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-violet-600 file:text-white hover:file:bg-violet-500 file:transition-colors`}
                     />
                 </div>
                 {isEditing && (
-                    <p className="text-[10px] font-medium text-gray-500 ml-1">Provide a public URL to your profile picture </p>
+                    <p className="text-[10px] font-medium text-gray-500 ml-1">Upload a real file (JPG, PNG, WebP) directly to Cloudinary.</p>
                 )}
             </div>
         </div>

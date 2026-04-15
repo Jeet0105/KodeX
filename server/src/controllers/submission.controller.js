@@ -266,3 +266,24 @@ export const getAllUserSubmissions = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const getSubmissionById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const submission = await Submission.findById(id).populate("problem", "title difficulty");
+
+    if (!submission) {
+      return res.status(404).json({ message: "Submission not found" });
+    }
+
+    if (submission.user.toString() !== req.user.id && req.user.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    res.status(200).json({ submission });
+  } catch (error) {
+    console.error("Get Submission Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

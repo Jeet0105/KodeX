@@ -264,9 +264,19 @@ export const getProblemById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const problem = await Problem.findById(id).select("+driverCode");
+    let query = Problem.findById(id).select("+driverCode");
+    
+    if (req.user && req.user.role === "admin") {
+      query = query.select("+hiddenTestcases");
+    }
 
-    if (!problem || problem.isDeleted || !problem.isPublished) {
+    const problem = await query.exec();
+
+    if (!problem || problem.isDeleted) {
+      return res.status(404).json({ message: "Problem not found" });
+    }
+
+    if (!problem.isPublished && !(req.user && req.user.role === "admin")) {
       return res.status(404).json({ message: "Problem not found" });
     }
 

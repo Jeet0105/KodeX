@@ -4,6 +4,7 @@ import Register from './pages/Register'
 import Login from './pages/Login'
 import ForgotPassword from './pages/ForgotPassword'
 import CreateProblem from './pages/CreateProblem'
+import EditProblem from './pages/EditProblem'
 import AdminProblemDashboard from './pages/AdminProblemDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
 import ProblemsPage from './pages/ProblemsPage'
@@ -68,6 +69,7 @@ function App() {
           <Route path="users" element={<AdminUsers />} />
           <Route path="problems" element={<AdminProblemDashboard />} />
           <Route path="create-problem" element={<CreateProblem />} />
+          <Route path="edit-problem/:id" element={<EditProblem />} />
           <Route path="problem/:id" element={<ViewProblem />} />
           <Route path="submissions" element={<AdminSubmissions />} />
         </Route>

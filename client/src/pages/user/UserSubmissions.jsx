@@ -75,11 +75,7 @@ export default function UserSubmissions() {
     setCodeLoading(true)
 
     try {
-      // Create a specific user-accessible endpoint for this if needed, 
-      // but usually general submissions endpoint (if allowed) works.
-      // Re-using admin logic for now, but in a real app, 
-      // we'd have /api/v1/submissions/:id check ownership.
-      const res = await api.get(`/api/v1/admin/submissions/${id}`) // This might fail if not admin, check backend
+      const res = await api.get(`/api/v1/submissions/${id}`)
       setExpandedCode(res.data.submission?.code || "// No code available")
     } catch {
         // Fallback: Backend might not have a general user 'get single submission' yet
