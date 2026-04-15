@@ -9,6 +9,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 import ProblemsPage from './pages/ProblemsPage'
 import ProblemSolvePage from './pages/ProblemSolvePage'
 import ViewProblem from './pages/ViewProblem'
+import DiscussionsPage from './pages/DiscussionsPage'
 
 /* ── Admin panel ── */
 import AdminLayout from './pages/admin/AdminLayout'
@@ -39,6 +40,18 @@ function App() {
         <Route path="/problems/:id"
           element={<ProtectedRoute>
             <ProblemSolvePage />
+          </ProtectedRoute>}
+        />
+        
+        {/* ── Discussions routes ── */}
+        <Route path="/discussions"
+          element={<ProtectedRoute>
+            <DiscussionsPage />
+          </ProtectedRoute>}
+        />
+        <Route path="/discuss"
+          element={<ProtectedRoute>
+            <DiscussionsPage />
           </ProtectedRoute>}
         />
 

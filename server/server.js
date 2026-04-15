@@ -12,6 +12,7 @@ import problemRoutes from "./src/routes/problem.routes.js";
 import submissionRoutes from "./src/routes/submission.routes.js";
 import adminRoutes from "./src/routes/admin.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
+import discussionRoutes from "./src/routes/discussion.routes.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -75,6 +76,7 @@ app.use("/api/v1/problems", problemRoutes);
 app.use("/api/v1/submissions", submissionRoutes);
 app.use("/api/v1/admin", adminRoutes);
 app.use("/api/v1/users", userRoutes);
+app.use("/api/v1/discussions", discussionRoutes);
 
 /* 404 handler */
 app.use((req, res) => {

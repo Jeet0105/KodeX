@@ -3,6 +3,9 @@ import { useParams, useNavigate } from "react-router-dom"
 import { useSelector } from "react-redux"
 import api from "../utils/api"
 import Editor from "@monaco-editor/react"
+import DiscussionList from "../components/discussions/DiscussionList"
+import DiscussionDetail from "../components/discussions/DiscussionDetail"
+import CreateDiscussion from "../components/discussions/CreateDiscussion"
 
 const LANGUAGES = [
   { label: "C++", value: "cpp", monaco: "cpp" },
@@ -80,6 +83,10 @@ export default function ProblemSolvePage() {
   const [langMenuOpen, setLangMenuOpen] = useState(false)
   const [submissions, setSubmissions] = useState([])
   const [subsLoading, setSubsLoading] = useState(false)
+
+  // Discussion sub-routing
+  const [discViewMode, setDiscViewMode] = useState("list") // 'list', 'detail', 'create'
+  const [activeDiscussionId, setActiveDiscussionId] = useState(null)
 
   /* ── fetch problem ── */
   useEffect(() => {
@@ -448,11 +455,30 @@ export default function ProblemSolvePage() {
             )}
 
             {activeTab === "discussion" && (
-              <div className="flex flex-col items-center justify-center h-full text-gray-600 gap-3">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                <div className="text-sm">No discussions yet</div>
+              <div className="h-full flex flex-col p-2">
+                {discViewMode === "list" && (
+                  <DiscussionList 
+                    problemId={id} 
+                    onSelectDiscussion={(discId) => {
+                      setActiveDiscussionId(discId)
+                      setDiscViewMode("detail")
+                    }}
+                    onCreateNew={() => setDiscViewMode("create")}
+                  />
+                )}
+                {discViewMode === "detail" && (
+                  <DiscussionDetail 
+                    discussionId={activeDiscussionId} 
+                    onBack={() => setDiscViewMode("list")} 
+                  />
+                )}
+                {discViewMode === "create" && (
+                  <CreateDiscussion 
+                    problemId={id} 
+                    onBack={() => setDiscViewMode("list")}
+                    onCreated={() => setDiscViewMode("list")}
+                  />
+                )}
               </div>
             )}
 
