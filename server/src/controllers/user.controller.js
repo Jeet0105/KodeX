@@ -117,6 +117,19 @@ export const getUserDashboardStats = async (req, res) => {
       }
     }
 
+    // 7. Calculate total problems count for the remaining problems circle (only published & non-deleted)
+    const baseQuery = { isPublished: true, isDeleted: false };
+    const totalProblems = await Problem.countDocuments(baseQuery);
+    const totalEasy = await Problem.countDocuments({ ...baseQuery, difficulty: "easy" });
+    const totalMedium = await Problem.countDocuments({ ...baseQuery, difficulty: "medium" });
+    const totalHard = await Problem.countDocuments({ ...baseQuery, difficulty: "hard" });
+
+    // 8. Calculate user rank percentage
+    const totalUsers = await User.countDocuments();
+    const rank = (await User.countDocuments({ totalPoints: { $gt: user.totalPoints } })) + 1;
+    const topPercentage = totalUsers > 0 ? Math.max(1, Math.ceil((rank / totalUsers) * 100)) : 100;
+
+
     return res.status(200).json({
         user: {
             username: user.username,
@@ -132,6 +145,13 @@ export const getUserDashboardStats = async (req, res) => {
         streak: {
             current: currentStreak,
             longest: longestStreak
+        },
+        totalProblems,
+        topPercentage,
+        totalBreakdown: {
+            easy: totalEasy,
+            medium: totalMedium,
+            hard: totalHard
         }
     });
 

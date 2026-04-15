@@ -65,36 +65,56 @@ export default function UserDashboard() {
     { name: "Easy", value: stats.solvedBreakdown.easy, fill: DIFFICULTY_COLORS.easy },
     { name: "Medium", value: stats.solvedBreakdown.medium, fill: DIFFICULTY_COLORS.medium },
     { name: "Hard", value: stats.solvedBreakdown.hard, fill: DIFFICULTY_COLORS.hard },
-    { name: "Remaining", value: Math.max(0, 1200 - stats.solvedBreakdown.total), fill: "rgba(255,255,255,0.03)" }
+    { name: "Remaining", value: Math.max(0, (stats.totalProblems || 1200) - stats.solvedBreakdown.total), fill: "rgba(255,255,255,0.03)" }
   ]
 
-  // Activity Heatmap Generation (Last 6 months for visual)
-  // Logic to fill a grid for the heatmap
+  // Activity Heatmap Generation (Github Style Grid)
   const renderHeatmap = () => {
-      const days = 140; // Approx 20 weeks
+      const displayDays = 365; // ~1 year to cover the whole width
       const grid = [];
       const activityMap = {};
-      stats.activityData.forEach(d => activityMap[d.date] = d.count);
+      let maxCount = 1;
       
-      const start = new Date();
-      start.setDate(start.getDate() - days);
+      stats.activityData.forEach(d => {
+          activityMap[d.date] = d.count;
+          if (d.count > maxCount) maxCount = d.count;
+      });
       
-      for(let i=0; i<days; i++) {
-          const dateStr = start.toISOString().split('T')[0];
-          const count = activityMap[dateStr] || 0;
+      const today = new Date();
+      let start = new Date(today);
+      start.setDate(today.getDate() - displayDays);
+      
+      // Rewind to the nearest Sunday to match a 7-row grid correctly
+      while(start.getDay() !== 0) {
+          start.setDate(start.getDate() - 1);
+      }
+      
+      const totalDays = Math.ceil(Math.abs(today - start) / (1000 * 60 * 60 * 24)) + 1;
+      const current = new Date(start);
+      
+      for(let i = 0; i < totalDays; i++) {
+          // activityData groups by UTC date strings ("YYYY-MM-DD")
+          const utcDateStr = current.toISOString().split('T')[0];
+          
+          const count = activityMap[utcDateStr] || 0;
           let opacity = "bg-white/[0.03]";
-          if (count > 0) opacity = "bg-violet-600/30";
-          if (count > 2) opacity = "bg-violet-600/60";
-          if (count > 5) opacity = "bg-violet-600";
+          
+          if (count > 0) {
+             const intensity = count / maxCount;
+             if (intensity > 0.75) opacity = "bg-violet-600";
+             else if (intensity > 0.5) opacity = "bg-violet-600/80";
+             else if (intensity > 0.25) opacity = "bg-violet-600/60";
+             else opacity = "bg-violet-600/40";
+          }
           
           grid.push(
               <div 
-                key={dateStr} 
+                key={utcDateStr} 
                 className={`w-3.5 h-3.5 rounded-[3px] ${opacity} transition-all hover:ring-2 hover:ring-violet-400/50 cursor-pointer`}
-                title={`${dateStr}: ${count} submissions`}
+                title={`${current.toDateString()}: ${count} submissions`}
               />
           );
-          start.setDate(start.getDate() + 1);
+          current.setDate(current.getDate() + 1);
       }
       return grid;
   }
@@ -108,7 +128,7 @@ export default function UserDashboard() {
           Welcome back, <span className="bg-gradient-to-r from-violet-400 to-indigo-400 bg-clip-text text-transparent">{stats.user.username}!</span>
         </h1>
         <p className="text-gray-400 font-medium">
-          You're in the top <span className="text-emerald-400">5% of learners</span> this week. Keep the momentum!
+          You're in the top <span className="text-emerald-400">{stats.topPercentage || 5}% of learners</span>. Keep the momentum!
         </p>
       </section>
 
@@ -122,7 +142,7 @@ export default function UserDashboard() {
                     <h3 className="text-gray-400 text-sm font-bold uppercase tracking-wider mb-1">Problems Solved</h3>
                     <div className="flex items-baseline gap-2">
                         <span className="text-4xl font-black text-white">{stats.solvedBreakdown.total}</span>
-                        <span className="text-gray-600 font-bold">/1200</span>
+                        <span className="text-gray-600 font-bold">/{stats.totalProblems || 1200}</span>
                     </div>
                 </div>
                 <div className="p-3 rounded-2xl bg-violet-600/10 border border-violet-500/20 text-violet-400">
@@ -152,14 +172,14 @@ export default function UserDashboard() {
                    </ResponsiveContainer>
                    <div className="absolute inset-0 flex items-center justify-center flex-col">
                        <span className="text-[10px] font-bold text-gray-500 uppercase">SOLVED</span>
-                       <span className="text-lg font-black text-white">{Math.round((stats.solvedBreakdown.total/1200)*100)}%</span>
+                       <span className="text-lg font-black text-white">{Math.round((stats.solvedBreakdown.total/(stats.totalProblems || 1200))*100) || 0}%</span>
                    </div>
                </div>
                
                <div className="flex-1 space-y-3">
-                   <DifficultyItem label="Easy" count={stats.solvedBreakdown.easy} color={DIFFICULTY_COLORS.easy} />
-                   <DifficultyItem label="Medium" count={stats.solvedBreakdown.medium} color={DIFFICULTY_COLORS.medium} />
-                   <DifficultyItem label="Hard" count={stats.solvedBreakdown.hard} color={DIFFICULTY_COLORS.hard} />
+                   <DifficultyItem label="Easy" count={stats.solvedBreakdown.easy} total={stats.totalBreakdown?.easy} color={DIFFICULTY_COLORS.easy} />
+                   <DifficultyItem label="Medium" count={stats.solvedBreakdown.medium} total={stats.totalBreakdown?.medium} color={DIFFICULTY_COLORS.medium} />
+                   <DifficultyItem label="Hard" count={stats.solvedBreakdown.hard} total={stats.totalBreakdown?.hard} color={DIFFICULTY_COLORS.hard} />
                </div>
            </div>
         </div>
@@ -237,8 +257,9 @@ export default function UserDashboard() {
                   <span>Less</span>
                   <div className="flex gap-1.5">
                       <div className="w-3 h-3 rounded-[3px] bg-white/[0.03]" />
-                      <div className="w-3 h-3 rounded-[3px] bg-violet-600/30" />
+                      <div className="w-3 h-3 rounded-[3px] bg-violet-600/40" />
                       <div className="w-3 h-3 rounded-[3px] bg-violet-600/60" />
+                      <div className="w-3 h-3 rounded-[3px] bg-violet-600/80" />
                       <div className="w-3 h-3 rounded-[3px] bg-violet-600" />
                   </div>
                   <span>More</span>
@@ -246,8 +267,10 @@ export default function UserDashboard() {
           </div>
 
           {/* Heatmap Grid */}
-          <div className="flex flex-wrap gap-2 justify-center lg:justify-start">
-             {renderHeatmap()}
+          <div className="w-full overflow-x-auto pb-4">
+             <div className="grid grid-rows-7 grid-flow-col gap-1.5 w-max">
+                {renderHeatmap()}
+             </div>
           </div>
       </section>
 
@@ -325,15 +348,18 @@ export default function UserDashboard() {
 
 /* ── HELPERS ── */
 
-function DifficultyItem({ label, count, color }) {
+function DifficultyItem({ label, count, total = 0, color }) {
+    const percentage = total > 0 ? (count / total) * 100 : 0;
     return (
         <div className="flex items-center justify-between group/diff">
             <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full" style={{ background: color }} />
-                <span className="text-xs font-bold text-gray-400 group-hover/diff:text-gray-300 transition-colors">{label} ({count})</span>
+                <span className="text-xs font-bold text-gray-400 group-hover/diff:text-gray-300 transition-colors">
+                    {label} <span className="text-gray-500 font-medium">({count}{total > 0 ? `/${total}` : ''})</span>
+                </span>
             </div>
             <div className="flex-1 mx-4 h-1 rounded-full bg-white/[0.03] overflow-hidden">
-                <div className="h-full rounded-full group-hover/diff:opacity-80 transition-all shadow-sm" style={{ background: color, width: `${Math.min(100, (count/400)*100)}%` }} />
+                <div className="h-full rounded-full group-hover/diff:opacity-80 transition-all shadow-sm" style={{ background: color, width: `${Math.min(100, percentage)}%` }} />
             </div>
         </div>
     )
