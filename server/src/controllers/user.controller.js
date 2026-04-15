@@ -2,6 +2,7 @@ import User from "../models/user.model.js";
 import Problem from "../models/problem.model.js";
 import Submission from "../models/submission.model.js";
 import cloudinary from "../config/cloudinary.js";
+import Leaderboard from "../models/leaderboard.model.js";
 
 /**
  * GET /api/v1/users/dashboard-stats
@@ -223,28 +224,62 @@ export const updateUserProfile = async (req, res) => {
 };
 
 /**
+ * Rebuilds the entire Leaderboard collection from User data.
+ * Called after each AC submission so ranks stay fresh.
+ */
+export const refreshLeaderboard = async () => {
+  const users = await User.find({ isBanned: false })
+    .select("_id totalPoints solvedProblems")
+    .sort({ totalPoints: -1, createdAt: 1 }); // tie-break by join date
+
+  const bulkOps = users.map((u, idx) => ({
+    updateOne: {
+      filter: { user: u._id },
+      update: {
+        $set: {
+          totalPoints: u.totalPoints,
+          problemsSolved: u.solvedProblems?.length || 0,
+          rank: idx + 1,
+          updatedAt: new Date(),
+        },
+      },
+      upsert: true,
+    },
+  }));
+
+  if (bulkOps.length > 0) {
+    await Leaderboard.bulkWrite(bulkOps);
+  }
+
+  // Remove entries for users who no longer exist
+  const userIds = users.map((u) => u._id);
+  await Leaderboard.deleteMany({ user: { $nin: userIds } });
+};
+
+/**
  * GET /api/v1/users/leaderboard
- * Fetches the top users based on totalPoints
+ * Fetches the top users from the pre-computed Leaderboard collection.
  */
 export const getLeaderboard = async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 50;
 
-    const leaderboard = await User.find()
-      .select("username avatarUrl totalPoints solvedProblems")
-      .sort({ totalPoints: -1 })
-      .limit(limit);
+    const entries = await Leaderboard.find()
+      .sort({ rank: 1 })
+      .limit(limit)
+      .populate("user", "username avatarUrl totalPoints solvedProblems");
 
-    // Map through to format structure and calculate solved problems length
-    const formattedLeaderboard = leaderboard.map((user, index) => ({
-      _id: user._id,
-      rank: index + 1,
-      username: user.username,
-      avatarUrl: user.avatarUrl,
-      totalPoints: user.totalPoints,
-      problemsSolvedCount: user.solvedProblems?.length || 0,
-      level: Math.floor((user.totalPoints || 0) / 10) + 1,
-    }));
+    const formattedLeaderboard = entries
+      .filter((e) => e.user) // skip if user was deleted
+      .map((e) => ({
+        _id: e.user._id,
+        rank: e.rank,
+        username: e.user.username,
+        avatarUrl: e.user.avatarUrl,
+        totalPoints: e.totalPoints,
+        problemsSolvedCount: e.problemsSolved,
+        level: Math.floor((e.totalPoints || 0) / 10) + 1,
+      }));
 
     res.status(200).json({
       success: true,
@@ -256,17 +291,28 @@ export const getLeaderboard = async (req, res) => {
   }
 };
 
+/**
+ * GET /api/v1/users/me/rank
+ * Returns the requesting user's rank from the Leaderboard collection.
+ */
 export const getUserRank = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("totalPoints solvedProblems");
+    const userId = req.user.id;
+
+    const user = await User.findById(userId).select("totalPoints solvedProblems");
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    const rank = (await User.countDocuments({ totalPoints: { $gt: user.totalPoints } })) + 1;
+    const entry = await Leaderboard.findOne({ user: userId });
+
+    // Fallback: if leaderboard hasn't been built yet, compute on the fly
+    const rank = entry
+      ? entry.rank
+      : (await User.countDocuments({ totalPoints: { $gt: user.totalPoints } })) + 1;
 
     res.status(200).json({
       rank,
       solvedCount: user.solvedProblems?.length || 0,
-      solvedProblemsIds: user.solvedProblems || []
+      solvedProblemsIds: user.solvedProblems || [],
     });
   } catch (error) {
     console.error("Get User Rank Error:", error);

@@ -14,6 +14,7 @@ import adminRoutes from "./src/routes/admin.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
 import discussionRoutes from "./src/routes/discussion.routes.js";
 import cookieParser from "cookie-parser";
+import { refreshLeaderboard } from "./src/controllers/user.controller.js";
 
 dotenv.config();
 
@@ -95,6 +96,10 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
   try {
     await connectDB();
+
+    // Seed leaderboard on startup
+    await refreshLeaderboard();
+    // console.log("Leaderboard seeded successfully");
 
     const server = app.listen(PORT, () => {
       console.log(

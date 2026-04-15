@@ -2,6 +2,7 @@ import { runAllTestCases } from "../services/codeExecution.service.js";
 import Problem from "../models/problem.model.js";
 import User from "../models/user.model.js";
 import Submission from "../models/submission.model.js";
+import { refreshLeaderboard } from "./user.controller.js";
 
 /**
  * RUN — Execute on visible test cases only, no DB storage
@@ -178,10 +179,23 @@ export const submitCode = async (req, res) => {
 
     // ---- If AC, add to user's solvedProblems (no duplicates) ----
     if (verdict === "AC") {
-      await User.findByIdAndUpdate(userId, {
-        $addToSet: { solvedProblems: problemId },
-        $inc: { totalPoints: problem.points || 0 },
-      });
+      const currentUser = await User.findById(userId);
+      const alreadySolved = currentUser.solvedProblems?.some(
+        (pid) => pid.toString() === problemId.toString()
+      );
+
+      if (!alreadySolved) {
+        // Only award points on first AC for this problem
+        await User.findByIdAndUpdate(userId, {
+          $addToSet: { solvedProblems: problemId },
+          $inc: { totalPoints: problem.points || 0 },
+        });
+      }
+
+      // Refresh leaderboard ranks (runs async, don't block response)
+      refreshLeaderboard().catch((err) =>
+        console.error("Leaderboard refresh error:", err)
+      );
     }
 
     return res.status(201).json({
