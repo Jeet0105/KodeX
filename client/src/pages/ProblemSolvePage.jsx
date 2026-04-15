@@ -83,6 +83,46 @@ export default function ProblemSolvePage() {
   const [langMenuOpen, setLangMenuOpen] = useState(false)
   const [submissions, setSubmissions] = useState([])
   const [subsLoading, setSubsLoading] = useState(false)
+  const [shortcutsOpen, setShortcutsOpen] = useState(false)
+
+  // Timer state
+  const [timerRunning, setTimerRunning] = useState(false)
+  const [elapsed, setElapsed] = useState(() => {
+    try {
+      const saved = localStorage.getItem(`kx-timer-${id}`)
+      return saved ? parseInt(saved, 10) : 0
+    } catch {
+      return 0
+    }
+  })
+
+  useEffect(() => {
+    let interval;
+    if (timerRunning) {
+      interval = setInterval(() => {
+        setElapsed((prev) => {
+          const next = prev + 1
+          localStorage.setItem(`kx-timer-${id}`, next.toString())
+          return next
+        })
+      }, 1000)
+    }
+    return () => clearInterval(interval)
+  }, [timerRunning, id])
+
+  const formatTimer = (sec) => {
+    const h = Math.floor(sec / 3600)
+    const m = Math.floor((sec % 3600) / 60)
+    const s = sec % 60
+    if (h > 0) return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+  }
+
+  const resetTimer = () => {
+    setElapsed(0)
+    localStorage.removeItem(`kx-timer-${id}`)
+    setTimerRunning(false)
+  }
 
   // Discussion sub-routing
   const [discViewMode, setDiscViewMode] = useState("list") // 'list', 'detail', 'create'
@@ -157,6 +197,25 @@ export default function ProblemSolvePage() {
       setRunning(false)
     }
   }
+
+  /* ── Keyboard Shortcuts ── */
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // CMD/CTRL + ' for Run
+      if ((e.ctrlKey || e.metaKey) && e.key === "'") {
+        e.preventDefault()
+        if (!running && !submitting) handleRun()
+      }
+      // CMD/CTRL + Enter for Submit
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault()
+        if (!running && !submitting) handleSubmit()
+      }
+    }
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [running, submitting, currentCode, language, id])
+
 
   /* ── Submit — hits POST /api/v1/submissions/submit-code ── */
   const handleSubmit = async () => {
@@ -254,17 +313,40 @@ export default function ProblemSolvePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg bg-white/[0.04] border border-white/[0.07] text-sm text-gray-400">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.04] border border-white/[0.07] text-sm transition-colors"
+               style={{ color: timerRunning ? "#4ade80" : "rgb(156, 163, 175)" }}>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
             </svg>
-            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "12px" }}>∞</span>
+            <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: "12px", width: elapsed >= 3600 ? "54px" : "38px", textAlign: "center" }}>
+              {elapsed === 0 && !timerRunning ? "∞" : formatTimer(elapsed)}
+            </span>
           </div>
-          <button className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.07] flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="3" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
-            </svg>
-          </button>
+          
+          <div className="flex items-center gap-1.5">
+            <button 
+              onClick={() => setTimerRunning(!timerRunning)}
+              className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.07] flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer hover:bg-white/[0.08]"
+              title={timerRunning ? "Pause Timer" : "Start Timer"}>
+              {timerRunning ? (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="6" y="4" width="4" height="16" /><rect x="14" y="4" width="4" height="16" />
+                </svg>
+              ) : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" style={{ marginLeft: "2px" }}>
+                  <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+              )}
+            </button>
+            <button 
+              onClick={resetTimer}
+              className="w-8 h-8 rounded-lg bg-white/[0.04] border border-white/[0.07] flex items-center justify-center text-gray-400 hover:text-white transition-colors cursor-pointer hover:bg-white/[0.08]"
+              title="Reset Timer">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="3" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14" />
+              </svg>
+            </button>
+          </div>
           {user?.avatarUrl ? (
             <img src={user.avatarUrl} className="w-8 h-8 rounded-full ring-2 ring-violet-500/40" alt="avatar" />
           ) : (
@@ -285,6 +367,7 @@ export default function ProblemSolvePage() {
           <div className="flex items-center px-4 border-b border-white/[0.06] shrink-0" style={{ background: "rgba(8,6,18,0.6)" }}>
             {[
               { key: "description", label: "Description", icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /></svg> },
+              { key: "editorial", label: "Editorial", icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg> },
               { key: "submissions", label: "Submissions", icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="9 11 12 14 22 4" /><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" /></svg> },
               { key: "discussion", label: "Discussion", icon: <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg> },
             ].map(tab => (
@@ -377,6 +460,28 @@ export default function ProblemSolvePage() {
                   </div>
                 )}
 
+              </div>
+            )}
+
+            {activeTab === "editorial" && (
+              <div className="space-y-6">
+                <div className="flex items-start justify-between gap-4">
+                  <h1 className="text-2xl font-bold leading-tight flex items-center gap-2">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-500"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    Editorial
+                  </h1>
+                </div>
+
+                {problem.editorial ? (
+                  <div className="text-[14px] text-gray-300 leading-relaxed whitespace-pre-wrap rounded-xl border border-white/[0.06] bg-black/20 p-5">
+                    {problem.editorial}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-20 text-gray-500 gap-4 border border-white/[0.06] rounded-xl bg-black/20">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1" className="opacity-40"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                    <div className="text-sm">No editorial available for this problem yet.</div>
+                  </div>
+                )}
               </div>
             )}
 
@@ -707,7 +812,9 @@ export default function ProblemSolvePage() {
           {/* Bottom action bar */}
           <div className="h-14 flex items-center justify-between px-4 border-t border-white/[0.06] shrink-0"
             style={{ background: "rgba(8,6,18,0.9)" }}>
-            <button className="flex items-center gap-1.5 text-[12px] text-gray-500 hover:text-gray-300 transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-white/[0.04]">
+            <button 
+              onClick={() => setShortcutsOpen(true)}
+              className="flex items-center gap-1.5 text-[12px] text-gray-500 hover:text-gray-300 transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-white/[0.04]">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
                 <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
@@ -744,6 +851,47 @@ export default function ProblemSolvePage() {
 
         </div>
       </div>
+
+      {/* Shortcuts Modal */}
+      {shortcutsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+             onClick={() => setShortcutsOpen(false)}>
+          <div className="bg-[#120e24] border border-white/[0.08] rounded-2xl w-full max-w-sm p-6 shadow-2xl"
+               onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-violet-500">
+                  <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" />
+                  <rect x="14" y="14" width="7" height="7" /><rect x="3" y="14" width="7" height="7" />
+                </svg>
+                Shortcuts
+              </h3>
+              <button onClick={() => setShortcutsOpen(false)} className="text-gray-500 hover:text-white transition-colors">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-300">Run Code</span>
+                <div className="flex gap-1.5">
+                  <kbd className="px-2 py-1 rounded bg-white/[0.05] border border-white/[0.1] text-xs font-mono text-gray-400">Ctrl</kbd>
+                  <kbd className="px-2 py-1 rounded bg-white/[0.05] border border-white/[0.1] text-xs font-mono text-gray-400">'</kbd>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-gray-300">Submit Solution</span>
+                <div className="flex gap-1.5">
+                  <kbd className="px-2 py-1 rounded bg-white/[0.05] border border-white/[0.1] text-xs font-mono text-gray-400">Ctrl</kbd>
+                  <kbd className="px-2 py-1 rounded bg-white/[0.05] border border-white/[0.1] text-xs font-mono text-gray-400">Enter</kbd>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
-}
+}
