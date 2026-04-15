@@ -276,3 +276,23 @@ export const getProblemById = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const getProblemMetadata = async (req, res) => {
+  try {
+    const stats = await Problem.aggregate([
+      { $match: { isPublished: true, isDeleted: false } },
+      { $group: { _id: "$difficulty", count: { $sum: 1 } } }
+    ]);
+
+    const counts = { easy: 0, medium: 0, hard: 0 };
+    let total = 0;
+    stats.forEach(s => {
+      counts[s._id] = s.count;
+      total += s.count;
+    });
+
+    res.status(200).json({ counts, totalProblems: total });
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};

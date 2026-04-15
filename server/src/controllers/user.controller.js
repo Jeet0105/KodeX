@@ -221,3 +221,21 @@ export const getLeaderboard = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+export const getUserRank = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("totalPoints solvedProblems");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    const rank = (await User.countDocuments({ totalPoints: { $gt: user.totalPoints } })) + 1;
+
+    res.status(200).json({
+      rank,
+      solvedCount: user.solvedProblems?.length || 0,
+      solvedProblemsIds: user.solvedProblems || []
+    });
+  } catch (error) {
+    console.error("Get User Rank Error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};

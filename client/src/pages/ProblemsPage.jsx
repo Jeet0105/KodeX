@@ -14,10 +14,6 @@ const diffColors = {
     hard: { bg: "rgba(239,68,68,0.1)", text: "#f87171", border: "rgba(239,68,68,0.2)" },
 }
 
-const mockAcceptance = Array.from({ length: 100 }, (_, i) =>
-    (30 + ((i * 37 + 13) % 40)).toFixed(1)
-)
-
 export default function ProblemsPage() {
     const [problems, setProblems] = useState([])
     const [loading, setLoading] = useState(true)
@@ -27,11 +23,30 @@ export default function ProblemsPage() {
     const [search, setSearch] = useState("")
     const [debouncedSearch, setDebouncedSearch] = useState("")
     const [selDiffs, setSelDiffs] = useState([])
+
     const [selTopics, setSelTopics] = useState([])
     const [hoveredRow, setHoveredRow] = useState(null)
+    const [metadata, setMetadata] = useState({ counts: { easy: 0, medium: 0, hard: 0 }, totalProblems: 0 })
+    const [userStats, setUserStats] = useState(null)
 
     const navigate = useNavigate()
     const { user } = useSelector((s) => s.user)
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const [metaRes, userRes] = await Promise.all([
+                    api.get("/api/v1/problems/metadata"),
+                    user ? api.get("/api/v1/users/me/rank") : Promise.resolve({ data: null })
+                ]);
+                setMetadata(metaRes.data);
+                if (userRes.data) setUserStats(userRes.data);
+            } catch (error) {
+                console.error("Failed to fetch page stats", error);
+            }
+        };
+        fetchStats();
+    }, [user]);
 
     useEffect(() => {
         const t = setTimeout(() => { setDebouncedSearch(search); setPage(1) }, 450)
@@ -128,8 +143,8 @@ export default function ProblemsPage() {
                                     </div>
                                     <div>
                                         <div className="text-xl font-bold leading-none">
-                                            0
-                                            <span className="text-sm text-gray-600 font-normal">/{total?.toLocaleString()}</span>
+                                            {userStats?.solvedCount || 0}
+                                            <span className="text-sm text-gray-600 font-normal">/{metadata.totalProblems?.toLocaleString()}</span>
                                         </div>
                                         <div className="text-[11px] text-gray-600 mt-1 tracking-[0.05em]">Solved</div>
                                     </div>
@@ -140,7 +155,9 @@ export default function ProblemsPage() {
                                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" strokeWidth="2"><circle cx="12" cy="8" r="6" /><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" /></svg>
                                     </div>
                                     <div>
-                                        <div className="text-xl font-bold leading-none text-violet-400">—</div>
+                                        <div className="text-xl font-bold leading-none text-violet-400">
+                                            {userStats?.rank ? `#${userStats.rank}` : "—"}
+                                        </div>
                                         <div className="text-[11px] text-gray-600 mt-1 tracking-[0.05em]">Rank</div>
                                     </div>
                                 </div>
@@ -170,7 +187,7 @@ export default function ProblemsPage() {
                                         {DIFFICULTIES.map(d => {
                                             const active = selDiffs.includes(d)
                                             const dc = diffColors[d.toLowerCase()]
-                                            const counts = { Easy: 452, Medium: 890, Hard: 312 }
+                                            const counts = metadata.counts;
                                             return (
                                                 <div key={d} className="kx-chip flex items-center justify-between px-3 py-2 rounded-[9px]"
                                                     onClick={() => toggleDiff(d)}
@@ -188,7 +205,7 @@ export default function ProblemsPage() {
                                                         </div>
                                                         <span className="text-[13px]" style={{ color: active ? dc.text : "#94a3b8", fontWeight: active ? 600 : 400 }}>{d}</span>
                                                     </div>
-                                                    <span className="text-[11px] text-gray-700" style={{ fontFamily: "'JetBrains Mono',monospace" }}>{counts[d]}</span>
+                                                    <span className="text-[11px] text-gray-700" style={{ fontFamily: "'JetBrains Mono',monospace" }}>{counts[d.toLowerCase()] || 0}</span>
                                                 </div>
                                             )
                                         })}
@@ -318,6 +335,7 @@ export default function ProblemsPage() {
                                     problems.map((p, idx) => {
                                         const dc = diffColors[p.difficulty] || diffColors.easy
                                         const isHovered = hoveredRow === p._id
+                                        const isSolved = userStats?.solvedProblemsIds?.includes(p._id)
                                         return (
                                             <div key={p._id} className="kx-row kx-fadein grid px-5 py-3 items-center"
                                                 onClick={() => navigate(`/problems/${p._id}`)}
@@ -327,16 +345,17 @@ export default function ProblemsPage() {
                                                     gridTemplateColumns: "52px 1fr 120px 190px 100px",
                                                     borderBottom: idx < problems.length - 1 ? "1px solid rgba(255,255,255,0.04)" : "none",
                                                     animationDelay: `${idx * 0.03}s`,
+                                                    backgroundColor: isSolved ? "rgba(34,197,94,0.03)" : "transparent"
                                                 }}>
 
                                                 {/* Status */}
                                                 <div>
                                                     <div className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150"
                                                         style={{
-                                                            border: "1.5px solid rgba(255,255,255,0.08)",
-                                                            background: isHovered ? "rgba(124,58,237,0.08)" : "transparent",
+                                                            border: `1.5px solid ${isSolved ? "rgba(34,197,94,0.3)" : "rgba(255,255,255,0.08)"}`,
+                                                            background: isSolved ? "rgba(34,197,94,0.15)" : (isHovered ? "rgba(124,58,237,0.08)" : "transparent"),
                                                         }}>
-                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#374151" strokeWidth="2.5">
+                                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke={isSolved ? "#4ade80" : "#374151"} strokeWidth={isSolved ? "3" : "2.5"}>
                                                             <polyline points="20 6 9 17 4 12" />
                                                         </svg>
                                                     </div>
@@ -374,7 +393,7 @@ export default function ProblemsPage() {
 
                                                 {/* Acceptance */}
                                                 <div className="text-xs text-slate-600" style={{ fontFamily: "'JetBrains Mono',monospace" }}>
-                                                    {mockAcceptance[(idx + (page - 1) * 15) % mockAcceptance.length]}%
+                                                    {p.acceptanceRate || 0}%
                                                 </div>
                                             </div>
                                         )

@@ -104,6 +104,7 @@ const userSchema = new mongoose.Schema(
 /* Indexes */
 userSchema.index({ email: 1 }, { unique: true });
 userSchema.index({ username: 1 }, { unique: true });
+userSchema.index({ totalPoints: -1 });
 
 /* Password Hashing (FIXED) */
 userSchema.pre("save", async function () {

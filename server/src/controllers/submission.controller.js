@@ -168,6 +168,14 @@ export const submitCode = async (req, res) => {
       testCaseResults,
     });
 
+    // ---- Update Problem Stats ----
+    await Problem.findByIdAndUpdate(problemId, {
+      $inc: {
+        totalSubmissions: 1,
+        acceptedSubmissions: verdict === "AC" ? 1 : 0
+      }
+    });
+
     // ---- If AC, add to user's solvedProblems (no duplicates) ----
     if (verdict === "AC") {
       await User.findByIdAndUpdate(userId, {

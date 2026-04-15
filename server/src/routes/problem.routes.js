@@ -10,11 +10,13 @@ import {
   deleteProblem,
   getProblems,
   getProblemById,
+  getProblemMetadata,
 } from "../controllers/problem.controller.js";
 
 const router = express.Router();
 
 /* ---------- USER ROUTES ---------- */
+router.get("/metadata", verifyUser, getProblemMetadata);
 router.get("/", verifyUser, getProblems);
 router.get("/:id", verifyUser, getProblemById);
 

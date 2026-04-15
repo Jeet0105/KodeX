@@ -100,6 +100,16 @@ const problemSchema = new mongoose.Schema(
 
     points: Number,
 
+    totalSubmissions: {
+      type: Number,
+      default: 0,
+    },
+
+    acceptedSubmissions: {
+      type: Number,
+      default: 0,
+    },
+
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -119,7 +129,7 @@ const problemSchema = new mongoose.Schema(
       index: true
     }
   },
-  { timestamps: true }
+  { timestamps: true, toJSON: { virtuals: true }, toObject: { virtuals: true } }
 );
 
 /* ---------------- AUTO POINT CALC ---------------- */
@@ -133,6 +143,12 @@ problemSchema.pre("save", function () {
   if (this.isModified("difficulty")) {
     this.points = difficultyPoints[this.difficulty];
   }
+});
+
+/* ---------------- VIRTUAL PROPERTIES ---------------- */
+problemSchema.virtual('acceptanceRate').get(function() {
+  if (!this.totalSubmissions) return 0;
+  return parseFloat(((this.acceptedSubmissions / this.totalSubmissions) * 100).toFixed(1));
 });
 
 /* ---------------- INDEXES ---------------- */
