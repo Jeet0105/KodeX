@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from "react-redux"
 import api from "../../utils/api"
 import { setUser } from "../../redux/userSlice"
 import { toast } from "react-toastify"
-import { FiUser, FiMail, FiZap, FiCamera, FiSave, FiX, FiCheck, FiAward } from "react-icons/fi"
+import { FiUser, FiMail, FiZap, FiCamera, FiSave, FiX, FiCheck, FiAward, FiLock } from "react-icons/fi"
 
 export default function UserProfile() {
   const { user } = useSelector((state) => state.user)
@@ -14,6 +14,9 @@ export default function UserProfile() {
   const [avatarPreview, setAvatarPreview] = useState(null)
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" })
+  const [passwordLoading, setPasswordLoading] = useState(false)
 
   const handleFileChange = (e) => {
     const file = e.target.files[0]
@@ -53,6 +56,26 @@ export default function UserProfile() {
     setAvatarFile(null)
     setAvatarPreview(null)
     setIsEditing(false)
+  }
+
+  const handlePasswordChange = async (e) => {
+    e.preventDefault()
+    if (passwords.new !== passwords.confirm) {
+      return toast.error("New passwords do not match")
+    }
+    setPasswordLoading(true)
+    try {
+      const res = await api.put("/api/v1/users/change-password", {
+        currentPassword: passwords.current,
+        newPassword: passwords.new
+      })
+      toast.success(res.data.message || "Password updated successfully")
+      setPasswords({ current: "", new: "", confirm: "" })
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to update password")
+    } finally {
+      setPasswordLoading(false)
+    }
   }
 
   return (
@@ -198,6 +221,90 @@ export default function UserProfile() {
             </div>
         </div>
       </section>
+
+      {/* ═══ PASSWORD CHANGE ═══ */}
+      {!user?.isGoogleUser && (
+        <section className="space-y-6">
+          <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/[0.04]">
+              <div className="flex items-center gap-3">
+                  <div className="p-2 rounded-xl bg-white/[0.03] text-gray-400 border border-white/[0.06]">
+                      <FiLock size={20} />
+                  </div>
+                  <h3 className="text-xl font-bold text-white tracking-tight">Security</h3>
+              </div>
+          </div>
+          
+          <form onSubmit={handlePasswordChange} className="p-6 md:p-8 rounded-3xl border border-white/[0.06] bg-white/[0.01] space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {/* Current password */}
+                <div className="space-y-3 md:col-span-2">
+                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest ml-1">Current Password</label>
+                    <div className="relative">
+                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
+                        <input 
+                          type="password" 
+                          value={passwords.current}
+                          onChange={(e) => setPasswords({...passwords, current: e.target.value})}
+                          required
+                          placeholder="••••••••"
+                          className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-white outline-none focus:border-violet-500/50 focus:bg-white/[0.04] transition-all cursor-text"
+                        />
+                    </div>
+                </div>
+
+                {/* New password */}
+                <div className="space-y-3">
+                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest ml-1">New Password</label>
+                    <div className="relative">
+                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
+                        <input 
+                          type="password" 
+                          value={passwords.new}
+                          onChange={(e) => setPasswords({...passwords, new: e.target.value})}
+                          required
+                          minLength={8}
+                          placeholder="••••••••"
+                          className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-white outline-none focus:border-violet-500/50 focus:bg-white/[0.04] transition-all cursor-text"
+                        />
+                    </div>
+                </div>
+
+                {/* Confirm password */}
+                <div className="space-y-3">
+                    <label className="text-xs font-black text-gray-500 uppercase tracking-widest ml-1">Confirm New Password</label>
+                    <div className="relative">
+                        <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600" size={18} />
+                        <input 
+                          type="password" 
+                          value={passwords.confirm}
+                          onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
+                          required
+                          minLength={8}
+                          placeholder="••••••••"
+                          className="w-full pl-12 pr-4 py-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] text-white outline-none focus:border-violet-500/50 focus:bg-white/[0.04] transition-all cursor-text"
+                        />
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex justify-end pt-4">
+               <button 
+                 type="submit"
+                 disabled={passwordLoading}
+                 className="px-6 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] text-white text-sm font-bold transition-all border border-white/[0.06] active:scale-95 flex items-center gap-2 block"
+                 style={{ display: "flex" }} // explicitly flex
+               >
+                 {passwordLoading ? (
+                     <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+                 ) : (
+                     <FiLock size={16} />
+                 )}
+                 Update Password
+               </button>
+            </div>
+          </form>
+        </section>
+      )}
 
       {/* ═══ BADGES & ACHIEVEMENTS (Decorative) ═══ */}
       <section className="space-y-6 pt-4">

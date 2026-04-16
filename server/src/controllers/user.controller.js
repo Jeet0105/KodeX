@@ -319,3 +319,42 @@ export const getUserRank = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
+/**
+ * PUT /api/v1/users/change-password
+ * Change user password
+ */
+export const changePassword = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: "Please provide both current and new passwords." });
+    }
+
+    // Need to explicitly select +password since it's hidden by default in the schema
+    const user = await User.findById(userId).select("+password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    if (user.isGoogleUser) {
+      return res.status(400).json({ message: "Google accounts do not have passwords. Please use Google Sign-In." });
+    }
+
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Incorrect current password." });
+    }
+
+    user.password = newPassword;
+    await user.save(); // password hashing is handled by pre-save hook
+
+    res.status(200).json({ message: "Password updated successfully." });
+  } catch (error) {
+    console.error("Change Password Error:", error);
+    res.status(500).json({ message: "Server error." });
+  }
+};
+

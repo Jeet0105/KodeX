@@ -30,7 +30,11 @@ function Login() {
       dispatch(setUser(res.data.user))
 
       // Redirect
-      navigate("/dashboard")
+      if (res.data.user.role === "admin") {
+        navigate("/admin")
+      } else {
+        navigate("/problems")
+      }
     } catch (err) {
       const message =
         err.response?.data?.message || "Login failed"

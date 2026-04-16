@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { FcGoogle } from "react-icons/fc"
-import Footer from "../components/Footer"
+
 import { toast } from "react-toastify"
 import api from "../utils/api"
 import { useNavigate } from "react-router"
@@ -177,7 +177,6 @@ function Register() {
                 </div>
             </div>
 
-            <Footer />
         </div>
     )
 }

@@ -7,7 +7,6 @@ export async function handleGoogleAuth({
   setUser,
   navigate,
   setLoading,
-  redirectPath = "/dashboard",
   toast,
 }) {
   setLoading(true);
@@ -28,7 +27,12 @@ export async function handleGoogleAuth({
     dispatch(setUser(res.data.user));
 
     toast.success(res.data.message || "Google sign-in successful!");
-    navigate(redirectPath);
+    
+    if (res.data.user.role === "admin") {
+      navigate("/admin");
+    } else {
+      navigate("/problems");
+    }
   } catch (error) {
     if (error.code !== "auth/popup-closed-by-user") {
       console.error("Google auth error:", error);

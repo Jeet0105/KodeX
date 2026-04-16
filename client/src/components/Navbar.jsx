@@ -92,7 +92,7 @@ export default function Navbar() {
                   </div>
                 )}
                 <span className="text-sm text-gray-400 group-hover:text-white transition-colors hidden md:block">
-                  {user.name}
+                  {user.username}
                 </span>
               </button>
 

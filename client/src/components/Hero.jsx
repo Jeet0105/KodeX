@@ -1,4 +1,17 @@
+import { useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+
 export default function Hero() {
+  const { user } = useSelector((state) => state.user);
+  const navigate = useNavigate();
+
+  const handleStartPractice = () => {
+    if (user) {
+      navigate('/problems');
+    } else {
+      navigate('/register');
+    }
+  };
   return (
     <section className="text-center py-24 px-6 max-w-4xl mx-auto">
       <span className="text-xs tracking-widest text-purple-400 bg-purple-900/30 px-4 py-1 rounded-full">
@@ -17,7 +30,10 @@ export default function Hero() {
       </p>
 
       <div className="mt-10 flex justify-center gap-4">
-        <button className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-xl font-medium shadow-lg shadow-purple-900/40 cursor-pointer">
+        <button 
+          onClick={handleStartPractice}
+          className="bg-purple-600 hover:bg-purple-700 px-6 py-3 rounded-xl font-medium shadow-lg shadow-purple-900/40 cursor-pointer"
+        >
           Start Practicing →
         </button>
 
