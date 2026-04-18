@@ -201,7 +201,6 @@ function ForgotPassword() {
               </form>
             </>
           )}
-
           <div className="mt-6 text-center">
              <button onClick={() => navigate("/login")} className="text-gray-400 hover:text-white transition text-sm">
                 ← Back to Login
