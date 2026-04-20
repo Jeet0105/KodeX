@@ -45,11 +45,11 @@ KodeX is designed with a decoupled architecture, ensuring scalability, security,
 
 ```mermaid
 graph LR
-    User([User]) -->|HTTP/HTTPS| Frontend[React Client (Vite)]
-    Frontend -->|REST API| Backend[Node.js / Express Server]
-    Backend <-->|Mongoose| DB[(MongoDB)]
-    Backend <-->|API/Webhook| Judge0[Judge0 Service]
-    Judge0 -->|Executes in| Sandbox[(Docker Isolated Sandbox)]
+    User(["User"]) -->|HTTP/HTTPS| Frontend["React Client (Vite)"]
+    Frontend -->|REST API| Backend["Node.js / Express Server"]
+    Backend <-->|Mongoose| DB[("MongoDB")]
+    Backend <-->|API/Webhook| Judge0["Judge0 Service"]
+    Judge0 -->|Executes in| Sandbox[("Docker Isolated Sandbox")]
 ```
 
 ## ✨ Key Features
