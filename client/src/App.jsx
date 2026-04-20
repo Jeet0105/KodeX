@@ -12,6 +12,7 @@ import ProblemSolvePage from './pages/ProblemSolvePage'
 import ViewProblem from './pages/ViewProblem'
 import DiscussionsPage from './pages/DiscussionsPage'
 import About from './pages/About'
+import NotFound from './pages/NotFound'
 
 /* ── Admin panel ── */
 import AdminLayout from './pages/admin/AdminLayout'
@@ -90,6 +91,9 @@ function App() {
           <Route path="problems" element={<UserSubmissions />} />
           <Route path="leaderboard" element={<UserLeaderboard />} />
         </Route>
+
+        {/* ── 404 Catch All Route ── */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   )
