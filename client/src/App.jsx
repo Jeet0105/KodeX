@@ -11,6 +11,7 @@ import ProblemsPage from './pages/ProblemsPage'
 import ProblemSolvePage from './pages/ProblemSolvePage'
 import ViewProblem from './pages/ViewProblem'
 import DiscussionsPage from './pages/DiscussionsPage'
+import About from './pages/About'
 
 /* ── Admin panel ── */
 import AdminLayout from './pages/admin/AdminLayout'
@@ -31,6 +32,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/about" element={<About />} />
 
         {/* ── Public problem routes ── */}
         <Route path="/problems"

@@ -29,7 +29,7 @@ export default function Navbar() {
         >
           <div className="w-8 h-8 rounded-lg bg-violet-600 flex items-center justify-center">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-              <polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>
+              <polyline points="16 18 22 12 16 6" /><polyline points="8 6 2 12 8 18" />
             </svg>
           </div>
           <span className="font-bold text-lg text-white tracking-tight">
@@ -40,16 +40,15 @@ export default function Navbar() {
         {/* Nav links */}
         <nav className="hidden md:flex items-center gap-1">
           {[
-            { to: "/problems",  label: "Problems"  },
-            { to: "/topics",    label: "Topics"    },
+            { to: "/problems", label: "Problems" },
+            { to: "/about", label: "About" },
             { to: "/dashboard", label: "Dashboard" },
           ].map(({ to, label }) => (
             <NavLink key={to} to={to}
               className={({ isActive }) =>
-                `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? "text-white bg-white/[0.08]"
-                    : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
+                `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${isActive
+                  ? "text-white bg-white/[0.08]"
+                  : "text-gray-400 hover:text-white hover:bg-white/[0.04]"
                 }`
               }
             >
@@ -60,10 +59,9 @@ export default function Navbar() {
           {user?.role === "admin" && (
             <NavLink to="/admin"
               className={({ isActive }) =>
-                `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${
-                  isActive
-                    ? "text-violet-300 bg-violet-600/15"
-                    : "text-violet-400 hover:text-violet-300 hover:bg-violet-600/10"
+                `px-4 py-2 rounded-lg text-sm font-medium transition-all duration-150 ${isActive
+                  ? "text-violet-300 bg-violet-600/15"
+                  : "text-violet-400 hover:text-violet-300 hover:bg-violet-600/10"
                 }`
               }
             >
