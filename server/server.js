@@ -4,7 +4,7 @@ import connectDB from "./src/config/connectdb.js";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
-import rateLimit from "express-rate-limit";
+// import rateLimit from "express-rate-limit";
 import hpp from "hpp";
 // import mongoSanitize from "express-mongo-sanitize";
 import authRoutes from "./src/routes/auth.routes.js";
@@ -33,11 +33,11 @@ app.use(
 );
 
 /* Rate limiting (only for auth routes) */
-const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: "Too many requests from this IP, please try again later.",
-});
+// const authLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000,
+//   max: 100,
+//   message: "Too many requests from this IP, please try again later.",
+// });
 
 app.use("/api/v1", authLimiter);
 
