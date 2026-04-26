@@ -1,20 +1,20 @@
 import express from "express";
 import dotenv from "dotenv";
-import connectDB from "./src/config/connectdb.js";
+import connectDB from "../src/config/connectdb.js";
 import helmet from "helmet";
 import cors from "cors";
 import morgan from "morgan";
 import rateLimit from "express-rate-limit";
 import hpp from "hpp";
 // import mongoSanitize from "express-mongo-sanitize";
-import authRoutes from "./src/routes/auth.routes.js";
-import problemRoutes from "./src/routes/problem.routes.js";
-import submissionRoutes from "./src/routes/submission.routes.js";
-import adminRoutes from "./src/routes/admin.routes.js";
-import userRoutes from "./src/routes/user.routes.js";
-import discussionRoutes from "./src/routes/discussion.routes.js";
+import authRoutes from "../src/routes/auth.routes.js";
+import problemRoutes from "../src/routes/problem.routes.js";
+import submissionRoutes from "../src/routes/submission.routes.js";
+import adminRoutes from "../src/routes/admin.routes.js";
+import userRoutes from "../src/routes/user.routes.js";
+import discussionRoutes from "../src/routes/discussion.routes.js";
 import cookieParser from "cookie-parser";
-import { refreshLeaderboard } from "./src/controllers/user.controller.js";
+import { refreshLeaderboard } from "../src/controllers/user.controller.js";
 
 dotenv.config();
 
