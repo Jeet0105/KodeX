@@ -19,7 +19,7 @@ import { refreshLeaderboard } from "./src/controllers/user.controller.js";
 dotenv.config();
 
 const app = express();
-app.set("trust proxy", 1);
+// app.set("trust proxy", 1);
 /* ========================
    Security Middlewares
 ======================== */
@@ -39,7 +39,7 @@ app.use(
 //   message: "Too many requests from this IP, please try again later.",
 // });
 
-app.use("/api/v1", authLimiter);
+// app.use("/api/v1", authLimiter);
 
 /* Body parsers */
 app.use(express.json({ limit: "10kb" }));
