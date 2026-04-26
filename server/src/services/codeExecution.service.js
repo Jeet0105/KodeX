@@ -1,5 +1,7 @@
 import axios from "axios";
+import dotenv from "dotenv";
 
+dotenv.config();
 const JUDGE0_API_URL = process.env.JUDGE0_API_URL || "http://localhost:2358";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
