@@ -81,7 +81,7 @@ export const login = async (req, res) => {
       .cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite:"None",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
         maxAge: 3 * 24 * 60 * 60 * 1000,
       })
       .json({
@@ -98,7 +98,7 @@ export const logout = (req, res) => {
   res.status(200)
     .clearCookie("token", {
       httpOnly: true,
-      sameSite:"None",
+      sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
       secure: process.env.NODE_ENV === "production"
     })
     .json({ message: "Logout successful" });
@@ -139,7 +139,7 @@ export const googleLogin = async (req, res) => {
       .cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite:"None",
+        sameSite: process.env.NODE_ENV === "production" ? "None" : "Lax",
         maxAge: 3 * 24 * 60 * 60 * 1000,
       })
       .json({
@@ -174,7 +174,7 @@ export const forgotPassword = async (req, res) => {
     }
 
     if (user.isGoogleUser) {
-       return res.status(400).json({ message: "This account uses Google Login. Please sign in with Google." });
+      return res.status(400).json({ message: "This account uses Google Login. Please sign in with Google." });
     }
 
     // Generate 6 digit OTP
@@ -256,7 +256,7 @@ export const resetPassword = async (req, res) => {
     }
 
     if (newPassword.length < 8) {
-       return res.status(400).json({ message: "Password must be at least 8 characters length" });
+      return res.status(400).json({ message: "Password must be at least 8 characters length" });
     }
 
     // Double check OTP
@@ -276,7 +276,7 @@ export const resetPassword = async (req, res) => {
     user.password = newPassword;
     user.resetPasswordOtp = undefined;
     user.resetPasswordExpire = undefined;
-    
+
     // Last login could be updated or left as is
     await user.save();
 
